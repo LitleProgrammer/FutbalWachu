@@ -1,0 +1,9 @@
+name:  FutballBola
+version: '${project.version}'
+main: com.lubodi.futbollwachu.FutballBola
+api-version: '1.20'
+commands:
+  arena:
+    description: Comando principal
+  futbol:
+    description: Comando principal de fútbol
