@@ -35,4 +35,5 @@ com\lubodi\futbollwachu\HabilidadesFutbol\Habilidades\Portero.class
 com\lubodi\futbollwachu\Instance\mecanicas\AdministradorZonas.class
 com\lubodi\futbollwachu\BolaFisicasYMetodos\Fisicas.class
 com\lubodi\futbollwachu\HabilidadesFutbol\Habilidades\Regate$1.class
+com\lubodi\futbollwachu\Listeners\SaqueListener.class
 com\lubodi\futbollwachu\BolaFisicasYMetodos\Metodos.class

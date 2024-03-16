@@ -51,7 +51,6 @@ public class CountdownEnd extends BukkitRunnable {
         if (countdownSeconds.get() == 0) {
             cancel();
             arenas.End();
-            arenas.removeRedstoneBlock(arenas.getSpeackerGame());
             return;
         }
         countdownSeconds.decrementAndGet();

@@ -9,8 +9,7 @@ import org.bukkit.World;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Silverfish;
 
-import java.util.HashSet;
-import java.util.Set;
+import java.util.*;
 
 public class AdministradorZonas {
 
@@ -30,10 +29,10 @@ public class AdministradorZonas {
         this.zonaGeneralExterior = crearZonaFueraDeCampo(zonaGeneral);
         this.esquinasZonaGeneral = obtenerEsquinasDeRegion(this.zonaGeneral);
         this.esquinasZonaGeneralExterior = obtenerEsquinasDeRegion(this.zonaGeneralExterior);
-        this.zonaHorizontalSuperior = crearZonaHorizontalSuperior(zonaGeneralExterior, 3);
-        this.zonaHorizontalInferior = crearZonaHorizontalInferior(zonaGeneralExterior, 3);
+        this.zonaHorizontalSuperior = crearZonaHorizontalSuperior(zonaGeneralExterior, 6);
+        this.zonaHorizontalInferior = crearZonaHorizontalInferior(zonaGeneralExterior, 6);
         this.zonaHorizontales = unificarZonasHorizontales(zonaHorizontalSuperior, zonaHorizontalInferior, 2);
-        this.zonaVerticalIzquierda = crearZonaVerticalIzquierda(zonaGeneralExterior,5);
+        this.zonaVerticalIzquierda = crearZonaVerticalIzquierda(zonaGeneralExterior,6);
         this.zonaVerticalDerecha = crearZonaVerticalDerecha(zonaGeneralExterior,6);
         this.zonaVerticales = unificarZonasVerticales(zonaVerticalIzquierda, zonaVerticalDerecha, 4);
 
@@ -49,123 +48,111 @@ public class AdministradorZonas {
      */
     public Region crearZonaGeneral(Region region1, Region region2) {
         // Determinar los límites exteriores combinando las dos regiones
-        double minX = Math.min(region1.getCorner1().getX(), region2.getCorner1().getX());
-        double maxX = Math.max(region1.getCorner2().getX(), region2.getCorner2().getX());
-        double minY = Math.min(region1.getCorner1().getY(), region2.getCorner1().getY());
-        double maxY = Math.max(region1.getCorner2().getY(), region2.getCorner2().getY());
-        double minZ = Math.min(region1.getCorner1().getZ(), region2.getCorner1().getZ());
-        double maxZ = Math.max(region1.getCorner2().getZ(), region2.getCorner2().getZ());
+        Location corner1 = new Location(region1.getCorner1().getWorld(),
+                Math.min(region1.getCorner1().getX(), region2.getCorner1().getX()),
+                Math.min(region1.getCorner1().getY(), region2.getCorner1().getY()),
+                Math.min(region1.getCorner1().getZ(), region2.getCorner1().getZ()));
+
+        Location corner2 = new Location(region1.getCorner1().getWorld(),
+                Math.max(region1.getCorner2().getX(), region2.getCorner2().getX()),
+                Math.max(region1.getCorner2().getY(), region2.getCorner2().getY()),
+                Math.max(region1.getCorner2().getZ(), region2.getCorner2().getZ()));
 
         // Crear la zona general como una nueva Region que abarca ambos sets de coordenadas
-        return new Region(new Location(region1.getCorner1().getWorld(), minX, minY, minZ),
-                new Location(region1.getCorner1().getWorld(), maxX, maxY, maxZ));
+        return new Region(corner1, corner2);
     }
 
 
-    public Region crearZonaFueraDeCampo(Region zonaGeneral) {
-        // Definir el margen de expansión para la zona exterior en el plano horizontal
-        double margenHorizontal = 5; // Este valor puede ajustarse según tus necesidades
+    // Create a method to create a region outside of the general zone with a specified horizontal margin
+    public Region crearZonaFueraDeCampo(Region generalZone) {
+        // Define the horizontal margin
+        double horizontalMargin = 2;
 
-        // Obtener las esquinas actuales de la zona general
-        Location esquina1 = zonaGeneral.getCorner1();
-        Location esquina2 = zonaGeneral.getCorner2();
+        // Get the corners of the general zone
+        Location corner1 = generalZone.getCorner1();
+        Location corner2 = generalZone.getCorner2();
 
-        // Asegurar que esquina1 representa los valores mínimos y esquina2 los valores máximos para simplificar la lógica
-        double minX = Math.min(esquina1.getX(), esquina2.getX());
-        double minY = Math.min(esquina1.getY(), esquina2.getY()); // Se mantiene fijo sin margen vertical
-        double minZ = Math.min(esquina1.getZ(), esquina2.getZ());
-        double maxX = Math.max(esquina1.getX(), esquina2.getX());
-        double maxY = Math.max(esquina1.getY(), esquina2.getY()); // Se mantiene fijo sin margen vertical
-        double maxZ = Math.max(esquina1.getZ(), esquina2.getZ());
+        // Determine the minimum and maximum coordinates of the general zone
+        double minX = Math.min(corner1.getX(), corner2.getX());
+        double minY = Math.min(corner1.getY(), corner2.getY());
+        double minZ = Math.min(corner1.getZ(), corner2.getZ());
+        double maxX = Math.max(corner1.getX(), corner2.getX());
+        double maxY = Math.max(corner1.getY(), corner2.getY());
+        double maxZ = Math.max(corner1.getZ(), corner2.getZ());
 
-        // Calcular las nuevas esquinas expandiendo la zona general solo en el plano horizontal (X y Z)
-        Location nuevaEsquina1 = new Location(esquina1.getWorld(),
-                minX - margenHorizontal, minY, minZ - margenHorizontal);
-        Location nuevaEsquina2 = new Location(esquina2.getWorld(),
-                maxX + margenHorizontal, maxY, maxZ + margenHorizontal);
+        // Create new corners for the zone outside the field with the specified margin
+        Location newCorner1 = new Location(corner1.getWorld(), minX - horizontalMargin, minY, minZ - horizontalMargin);
+        Location newCorner2 = new Location(corner2.getWorld(), maxX + horizontalMargin, maxY, maxZ + horizontalMargin);
 
-        // Crear y devolver la nueva región expandida como la zona exterior
-        return new Region(nuevaEsquina1, nuevaEsquina2);
+        // Return a new region representing the zone outside the field
+        return new Region(newCorner1, newCorner2);
     }
-
     // ... Resto de la clase AdministradorZonas ...
 
     // Método para obtener las cuatro esquinas de la región proporcionada
+    // Método optimizado para obtener las cuatro esquinas de la región proporcionada
     public Set<Location> obtenerEsquinasDeRegion(Region region) {
-        Set<Location> esquinas = new HashSet<>();
         Location esquina1 = region.getCorner1();
         Location esquina2 = region.getCorner2();
 
-        // Calculamos las coordenadas para las esquinas 3 y 4 basándonos en las esquinas conocidas 1 y 2
-        double minX = esquina1.getX();
-        double minY = esquina1.getY();
-        double minZ = esquina1.getZ();
-        double maxX = esquina2.getX();
-        double maxY = esquina2.getY();
-        double maxZ = esquina2.getZ();
+        double minX = Math.min(esquina1.getX(), esquina2.getX());
+        double maxX = Math.max(esquina1.getX(), esquina2.getX());
+        double minY = Math.min(esquina1.getY(), esquina2.getY());
+        double minZ = Math.min(esquina1.getZ(), esquina2.getZ());
+        double maxZ = Math.max(esquina1.getZ(), esquina2.getZ());
 
-        // Añadiendo las esquinas ya conocidas
-        esquinas.add(esquina1); // Esquina inferior izquierda
-        esquinas.add(esquina2); // Esquina superior derecha
+        World world = esquina1.getWorld();
 
-        // Esquina superior izquierda
-        esquinas.add(new Location(esquina1.getWorld(), minX, maxY, maxZ));
-
-        // Esquina inferior derecha
-        esquinas.add(new Location(esquina1.getWorld(), maxX, minY, minZ));
+        // Añadiendo las cuatro esquinas con la altura media Y
+        Set<Location> esquinas = new HashSet<>();
+        esquinas.add(new Location(world, minX, minY, minZ)); // Esquina inferior izquierda
+        esquinas.add(new Location(world, minX, minY, maxZ)); // Esquina superior izquierda
+        esquinas.add(new Location(world, maxX, minY, minZ)); // Esquina inferior derecha
+        esquinas.add(new Location(world, maxX, minY, maxZ)); // Esquina superior derecha
 
         return esquinas;
     }
 
 
+
     public Region crearZonaHorizontalSuperior(Region zonaGeneralExterior, double grosorZ) {
-        // Encuentra las esquinas superiores (menor y mayor X, máximo Z)
-        Location esquinaSuperiorMinX = null;
-        Location esquinaSuperiorMaxX = null;
-        for (Location esquina : esquinasZonaGeneralExterior) {
-            if (esquina.getZ() == zonaGeneralExterior.getCorner1().getZ()) {
-                if (esquinaSuperiorMinX == null || esquina.getX() < esquinaSuperiorMinX.getX()) {
-                    esquinaSuperiorMinX = esquina;
-                }
-                if (esquinaSuperiorMaxX == null || esquina.getX() > esquinaSuperiorMaxX.getX()) {
-                    esquinaSuperiorMaxX = esquina;
-                }
-            }
-        }
-        double maxY = esquinaSuperiorMaxX.getY(); // No incrementamos en Y porque esta es la base
+        Location esquinaSuperiorMinX = esquinasZonaGeneralExterior.stream()
+                .filter(esquina -> esquina.getZ() == zonaGeneralExterior.getCorner2().getZ())
+                .min(Comparator.comparingDouble(Location::getX))
+                .orElse(null);
 
-        double maxX = esquinaSuperiorMaxX.getX() + grosorZ / 2;
-        double minX = esquinaSuperiorMinX.getX() + grosorZ / 2;
+        Location esquinaSuperiorMaxX = esquinasZonaGeneralExterior.stream()
+                .filter(esquina -> esquina.getZ() == zonaGeneralExterior.getCorner2().getZ())
+                .max(Comparator.comparingDouble(Location::getX))
+                .orElse(null);
 
-       return new Region(new Location(esquinaSuperiorMinX.getWorld(), minX, maxY, zonaGeneralExterior.getCorner1().getZ()),
-                new Location(esquinaSuperiorMaxX.getWorld(), maxX, maxY, zonaGeneralExterior.getCorner2().getZ()));
+        double minY = esquinaSuperiorMinX.getY();
+
+        double maxZ = esquinaSuperiorMinX.getZ() + grosorZ / 2;
+        double minZ = esquinaSuperiorMinX.getZ() - grosorZ / 2;
+
+        return new Region(
+                new Location(zonaGeneralExterior.getCorner1().getWorld(), esquinaSuperiorMinX.getX(), minY, maxZ), // Esquina superior izquierda
+                new Location(zonaGeneralExterior.getCorner2().getWorld(), esquinaSuperiorMaxX.getX(), minY, minZ)); // Esquina superior derecha
 
     }
 
-
     public Region crearZonaHorizontalInferior(Region zonaGeneralExterior, double grosorZ) {
-        // Encuentra las esquinas inferiores (menor y mayor X, mínimo Z)
-        Location esquinaInferiorMinX = null;
-        Location esquinaInferiorMaxX = null;
-        for (Location esquina : esquinasZonaGeneralExterior) {
-            if (esquina.getZ() == zonaGeneralExterior.getCorner1().getZ()) {
-                if (esquinaInferiorMinX == null || esquina.getX() < esquinaInferiorMinX.getX()) {
-                    esquinaInferiorMinX = esquina;
-                }
-                if (esquinaInferiorMaxX == null || esquina.getX() > esquinaInferiorMaxX.getX()) {
-                    esquinaInferiorMaxX = esquina;
-                }
-            }
-        }
+        Location esquinaInferiorMinX = esquinasZonaGeneralExterior.stream()
+                .filter(esquina -> esquina.getZ() == zonaGeneralExterior.getCorner1().getZ())
+                .min(Comparator.comparingDouble(Location::getX))
+                .orElse(null);
 
-        // Asumimos que maxY es la posición Y para la zona horizontal inferior
-        double maxY = esquinaInferiorMinX.getY(); // No incrementamos en Y porque esta es la base
+        Location esquinaInferiorMaxX = esquinasZonaGeneralExterior.stream()
+                .filter(esquina -> esquina.getZ() == zonaGeneralExterior.getCorner1().getZ())
+                .max(Comparator.comparingDouble(Location::getX))
+                .orElse(null);
 
-        // Expandir el valor de Z basado en el grosorZ proporcionado
+        double maxY = esquinaInferiorMinX.getY();
+
         double maxZ = esquinaInferiorMinX.getZ() + grosorZ / 2;
         double minZ = esquinaInferiorMinX.getZ() - grosorZ / 2;
 
-        // Usar las esquinas que encontramos y los nuevos valores de Z para crear la nueva Region
         return new Region(
                 new Location(zonaGeneralExterior.getCorner1().getWorld(), esquinaInferiorMinX.getX(), maxY, minZ),
                 new Location(zonaGeneralExterior.getCorner1().getWorld(), esquinaInferiorMaxX.getX(), maxY, maxZ)

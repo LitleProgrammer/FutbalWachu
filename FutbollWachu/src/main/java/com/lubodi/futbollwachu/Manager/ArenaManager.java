@@ -87,22 +87,7 @@ public class ArenaManager {
 
 
             }
-            Location speakerGame = new Location(
-                    world,
-                    config.getDouble("arenas." + str + ".speakergame.x"),
-                    config.getDouble("arenas." + str +".speakergame.y"),
-                    config.getDouble("arenas." + str + ".speakergame.z"),
-                    (float) config.getDouble("arenas." + str + ".speakergame.yaw"),
-                    (float) config.getDouble("arenas." + str + ".speakergame.pitch")
-            );
-            Location speakerGoal = new Location(
-                    world,
-                    config.getDouble("arenas." + str + ".speakergoal.x"),
-                    config.getDouble("arenas." + str +".speakergoal.y"),
-                    config.getDouble("arenas." + str + ".speakergoal.z"),
-                    (float) config.getDouble("arenas." + str + ".speakergoal.yaw"),
-                    (float) config.getDouble("arenas." + str + ".speakergoal.pitch")
-            );
+
             Location ballSpawn = new Location(
                     world,
                     config.getDouble("arenas." + str+ ".ball-spawn.x"),
@@ -119,7 +104,7 @@ public class ArenaManager {
                     (float)config.getDouble("arenas."+str+".spawn.yaw"),
                     (float)config.getDouble("arenas."+str+".spawn.pitch")
             );
-            arenas.add(new Arena(minigame,Integer.parseInt(str),portero, canchas, ballSpawn, spawn, zones,speakerGame,speakerGoal));
+            arenas.add(new Arena(minigame,Integer.parseInt(str),portero, canchas, ballSpawn, spawn, zones));
         }
     }
 
@@ -144,4 +129,6 @@ public class ArenaManager {
         }
         return null;
     }
+
+
 }

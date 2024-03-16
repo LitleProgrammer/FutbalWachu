@@ -11,8 +11,10 @@ import com.lubodi.futbollwachu.HabilidadesFutbol.Commands.ComandoFutbol;
 import com.lubodi.futbollwachu.HabilidadesFutbol.GUI.HabilidadGUI;
 import com.lubodi.futbollwachu.HabilidadesFutbol.Interfaces.HabilidadesManager;
 import com.lubodi.futbollwachu.HabilidadesFutbol.Listeners.HabilidadHandClickListener;
+import com.lubodi.futbollwachu.Instance.mecanicas.MecanicasSaque;
 import com.lubodi.futbollwachu.Listeners.ConnectListener;
 import com.lubodi.futbollwachu.Listeners.GameListener;
+import com.lubodi.futbollwachu.Listeners.SaqueListener;
 import com.lubodi.futbollwachu.Manager.ArenaManager;
 import com.lubodi.futbollwachu.Manager.ConfigManager;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -22,6 +24,7 @@ public final class FutballBola extends JavaPlugin {
     private Fisicas fisicas;
     private Metodos metodos;
     private ArenaManager arenaManager;
+    private MecanicasSaque mecanicasSaque;
 
 
 
@@ -53,6 +56,7 @@ public final class FutballBola extends JavaPlugin {
         getServer().getPluginManager().registerEvents(new GameListener(this), this);
         getServer().getPluginManager().registerEvents(new HabilidadHandClickListener(this, HabilidadesManager.getInstance()), this);
         getServer().getPluginManager().registerEvents(new HabilidadGUI(this, HabilidadesManager.getInstance()), this);
+        getServer().getPluginManager().registerEvents(new SaqueListener(this), this);
         getCommand("arena").setExecutor(new ArenaCommand(this));
     }
 
@@ -67,4 +71,9 @@ public final class FutballBola extends JavaPlugin {
     public static FutballBola getInstance() {
         return instance;
     }
+
+    public static MecanicasSaque getMecanicasSaque() {
+        return getInstance().mecanicasSaque;
+    }
+
 }

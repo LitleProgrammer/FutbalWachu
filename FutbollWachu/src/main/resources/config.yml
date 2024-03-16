@@ -22,7 +22,7 @@ arenas:
           z: 900
           yaw: -180
           pitch: 0
-          x2: -46
+          x2: -45
           y2: 51
           z2: 856
           yaw2: -180
@@ -56,7 +56,7 @@ arenas:
           world: 'world'
           x: -44
           y: 41
-          z: 900
+          z: 901
           yaw: -180
           pitch: 0
           x2: -4
@@ -101,18 +101,4 @@ arenas:
       y: 41
       z: 878
       yaw: 0
-      pitch: 0
-    speakergame:
-      world: 'world'
-      x: -89
-      y: 38
-      z: 907
-      yaw: -180
-      pitch: 0
-    speakergoal:
-      world: 'world'
-      x: -80
-      y: 37
-      z: 896
-      yaw: -180
       pitch: 0

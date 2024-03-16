@@ -35,7 +35,7 @@ public class CountdownGame extends BukkitRunnable {
     public void start() {
 
         runTaskTimer(minigame, 0, 20);
-        arenas.placeRedstoneBlock(arenas.getSpeackerGame());
+
     }
     /**
      * The run method for the game countdown.

@@ -1,6 +1,5 @@
 package com.lubodi.futbollwachu.BolaFisicasYMetodos;
 
-import com.lubodi.futbollwachu.BolaFisicasYMetodos.Fisicas;
 import org.bukkit.Location;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
@@ -10,11 +9,9 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.EntityDeathEvent;
 import org.bukkit.event.entity.EntityTargetEvent;
-import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 import org.bukkit.scheduler.BukkitRunnable;
-import java.util.Objects;
 
 
 import com.lubodi.futbollwachu.FutballBola;
@@ -35,9 +32,10 @@ public class Metodos implements Listener {
     /**
      * Spawns a Silverfish at the specified location and applies various effects and settings to it.
      *
-     * @param  location   the location where the Silverfish will be spawned
+     * @param location the location where the Silverfish will be spawned
+     * @return
      */
-    public void spawnSilverfishAtLocation(Location location) {
+    public Silverfish spawnSilverfishAtLocation(Location location) {
         if (location.getWorld() == null) {
             throw new IllegalArgumentException("Location world cannot be null");
         }
@@ -64,6 +62,7 @@ public class Metodos implements Listener {
         };
         task.runTaskTimer(plugin, 0, 4);
         fisicas.agregarTask(silverfish, task);
+        return silverfish;
     }
     /**
      * Removes the entity if it has a custom name "Bola".

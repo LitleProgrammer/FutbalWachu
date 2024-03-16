@@ -143,16 +143,11 @@ public class Arena {
     /**
      * Ubicación del altavoz del juego.
      */
-    private final Location speackerGame;
-
-    /**
-     * Ubicación del altavoz del gol.
-     */
-    private final Location speackerGoal;
 
 
 
 
+    private Map<UUID, Silverfish> bolas;
     private AdministradorDeSaques tiros;
         /**
          * Constructor de la clase Arena.
@@ -163,12 +158,10 @@ public class Arena {
          * @param canchas       Mapa concurrente que almacena las regiones de las canchas de cada equipo.
          * @param ballSpawn     Ubicación de generación del balón.
          * @param spawn         Ubicación de generación de jugadores.
-         * @param zones         Mapa concurrente que almacena las regiones de las zonas de cada equipo.
-         * @param speackerGame  Ubicación del altavoz del juego.
-         * @param speackerGoal  Ubicación del altavoz del gol.
+
          */
 
-    public Arena(FutballBola minigame, int id,ConcurrentHashMap<Team, Region> portero, ConcurrentHashMap<Team, Region> canchas, Location ballSpawn, Location spawn, ConcurrentHashMap<Team, Region> zones,Location speackerGame, Location speackerGoal) {
+    public Arena(FutballBola minigame, int id,ConcurrentHashMap<Team, Region> portero, ConcurrentHashMap<Team, Region> canchas, Location ballSpawn, Location spawn, ConcurrentHashMap<Team, Region> zones) {
         this.id = id;
         this.metodos = new Metodos(minigame, minigame.getFisicas());
         this.minigame = minigame;
@@ -179,8 +172,7 @@ public class Arena {
         this.zones = zones;
         this.porteros = new ConcurrentHashMap<>();
         this.teams = new HashMap<>();
-        this.speackerGame = speackerGame;
-        this.speackerGoal = speackerGoal;
+
         this.lastHitters = getLastHitters();
         this.state = GameState.RECRUITING;
         this.game = new Game(this);
@@ -191,6 +183,7 @@ public class Arena {
         this.objective = this.scoreboard.registerNewObjective("Marcador", "dummy", "Puntos");
         this.objective.setDisplaySlot(DisplaySlot.SIDEBAR);
         this.habilidades = HabilidadesManager.getInstance();
+        this.bolas = new HashMap<>();
         for (Team team : Team.values()) {
             Score score = this.objective.getScore(team.getDisplay() + ":");
             score.setScore(0);  // Puedes establecer aquí el puntaje inicial del equipo si es necesario
@@ -391,7 +384,8 @@ public class Arena {
      */
     public void spawnearbola() {
         Bukkit.getScheduler().scheduleSyncDelayedTask(minigame, () -> {
-            metodos.spawnSilverfishAtLocation(ballSpawn);
+            Silverfish bola = metodos.spawnSilverfishAtLocation(ballSpawn);
+            bolas.put(bola.getUniqueId(), bola);
             World world = ballSpawn.getWorld();
             world.spawnParticle(Particle.REDSTONE,
                     ballSpawn,
@@ -409,7 +403,7 @@ public class Arena {
                     .filter(Objects::nonNull)
                     .forEach(this::checkAndTeleportPlayer);
 
-            removeRedstoneBlock(speackerGoal);
+
         }, 120);
     }
     /**
@@ -709,8 +703,12 @@ public class Arena {
     }
 
 
-
-
+    public AdministradorDeSaques getAdministradorDeSaques() {
+        return tiros;
+    };
+    public Map<UUID, Silverfish> getBolas() {
+        return bolas;
+    }
 
     public Region getPorteroRegion(Team equipoPortero) {
         return portero.get(equipoPortero);
@@ -720,13 +718,6 @@ public class Arena {
         return porteros;
     }
 
-    public Location getSpeackerGame() {
-        return speackerGame;
-    }
-
-    public Location getSpeackerGoal() {
-        return speackerGoal;
-    }
 
     public void setLastHitters(Player lastHitters) {
         this.lastHitters = lastHitters;

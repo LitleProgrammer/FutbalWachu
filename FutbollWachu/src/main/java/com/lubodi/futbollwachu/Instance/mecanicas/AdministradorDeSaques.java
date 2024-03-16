@@ -27,7 +27,7 @@ public class AdministradorDeSaques {
 
         this.arena = arena;
         this.administradorZonas = new AdministradorZonas(arena);
-        this.mecanicas = new MecanicasSaque(arena);
+        this.mecanicas = new MecanicasSaque(arena,this);
 
     }
 
@@ -70,14 +70,17 @@ public class AdministradorDeSaques {
         if (entity != null) {
             if (arena.getEntityInCancha() == null) {
                 ZonaTipo zona = encontrarTipoDeZonaParaEntidad(entity);
+                Team equipo =  obtenerEquipoOpuestoUltimoGolpe();
+
                 switch (zona) {
                     case HORIZONTAL:
                         System.out.println("horizontal");
-                       encontrarUbicacionParaSaqueDeBanda(entity);
+                         mecanicas.teleportarJugadorAleatorioNoPortero(equipo, encontrarUbicacionParaSaqueDeBanda(entity));
 
                         break;
                     case VERTICAL:
-                        System.out.println("verticial");
+                        mecanicas.teleportarJugadorAleatorioNoPortero(equipo, encontrarUbicacionParaTiroDeEsquina(entity));
+
                         ;
                         break;
                     case GENERAL_EXTERIOR:
@@ -90,39 +93,45 @@ public class AdministradorDeSaques {
     }
 
 
-    public Team obtenerEquipoUltimoGolpe() {
+    public Team obtenerEquipoOpuestoUltimoGolpe() {
         // Obtener el jugador que hizo el último golpe
-        Player ultimoGolpeador = arena.getLastHitters();
+        Player ultimoGolpeador = arena.getLastHitters(); // Asumimos que este método devuelve el último golpeador
 
         // Verificar si el jugador existe y está en un equipo
         if (ultimoGolpeador != null && arena.getPlayers().contains(ultimoGolpeador.getUniqueId())) {
             // Obtener el equipo del jugador
-            return arena.getTeam(ultimoGolpeador);
+            Team equipoGolpeador = arena.getTeam(ultimoGolpeador);
+            System.out.println("El equipo del golpeador es " + equipoGolpeador);
+
+            // Determinar y devolver el equipo opuesto
+            if (equipoGolpeador != null) {
+                if (equipoGolpeador == Team.BLUE) {
+                    return Team.RED;
+                } else if (equipoGolpeador == Team.RED) {
+                    return Team.BLUE;
+                }
+            }
         }
 
-        // Si no se encuentra al último golpeador o no está en un equipo, devolver null
+        // Si no se encuentra al último golpeador, no está en un equipo, o si hay más de dos equipos y no se puede determinar un opuesto claro, devolver null
         return null;
     }
 
+
     public ZonaTipo encontrarTipoDeZonaParaEntidad(Entity entity) {
         System.out.println("la entidad esta en" + entity.getLocation());
-        // Verifica primero las zonas más específicas antes de la zona general exterior.
         if (administradorZonas.getZonaVerticalIzquierda().contains(entity) || administradorZonas.getZonaVerticalDerecha().contains(entity)) {
             return ZonaTipo.VERTICAL;
-        } else if (administradorZonas.getZonaHorizontalSuperior().contains(entity) || administradorZonas.getZonaHorizontalInferior().contains(entity)) {
+        }
+        if (administradorZonas.getZonaHorizontalSuperior().contains(entity) || administradorZonas.getZonaHorizontalInferior().contains(entity)) {
             return ZonaTipo.HORIZONTAL;
-        } else if (administradorZonas.getZonaGeneralExterior().contains(entity)) {
-            // Si no se encuentra en las zonas horizontales o verticales, pero sí en la zona general exterior,
-            // entonces se clasifica como GENERAL_EXTERIOR.
+        }
+        if (administradorZonas.getZonaGeneralExterior().contains(entity)) {
             System.out.println("Se encuentra en la zona general exterior");
             return ZonaTipo.GENERAL_EXTERIOR;
-        } else {
-            // Si la entidad no está en ninguna de las zonas anteriores, se considera que no ha sido encontrada.
-            System.out.println("La entidad no está en ninguna zona especificada");
-            return ZonaTipo.NO_ENCONTRADA;
         }
-
-
+        System.out.println("La entidad no está en ninguna zona especificada");
+        return ZonaTipo.NO_ENCONTRADA;
     }
 
     public Location encontrarUbicacionParaSaqueDeBanda(Entity balon) {
@@ -154,7 +163,7 @@ public class AdministradorDeSaques {
         // Imprime la coordenada Z del borde más cercano para fines de depuración.
 
 
-        // Crea y devuelve la nueva ubicación para el saque de banda en base a los cálculos.
+        // Crea y devuelve la nuevos ubicación para el saque de banda en base a los cálculos.
         Location ubicacionSaqueBanda = new Location(ubicacionBalon.getWorld(), ubicacionBalon.getX(), ubicacionBalon.getY(), zBordeCercano);
 
 
@@ -200,8 +209,21 @@ public class AdministradorDeSaques {
         return esquinaGeneralMasCercana;
     }
 
+    public Location encontrarUbicacionParaSaquedeDesdeJugadores(Player player) {
+        Location zBordeCercano = encontrarUbicacionParaSaqueDeBanda(player);
+        double adelantamiento = administradorZonas.getZonaHorizontalSuperior().contains(player) ? -2.0 : 2.0;
+        double nuevaZ = zBordeCercano.getZ() + adelantamiento;
 
+        return new Location(zBordeCercano.getWorld(), zBordeCercano.getX(), zBordeCercano.getY(), nuevaZ);
+    }
 
+    public void obtenerSilverFish() {
+        Silverfish silverfish = arena.getBolas().values().stream().findFirst().get();
+    }
+
+    public MecanicasSaque getMecanicasSaque() {
+        return mecanicas;
+    }
 
     public enum ZonaTipo {
         HORIZONTAL,

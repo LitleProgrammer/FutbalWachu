@@ -1,65 +1,53 @@
 package com.lubodi.futbollwachu.Instance.mecanicas;
 
-import com.google.common.cache.Cache;
-import com.google.common.cache.CacheBuilder;
 import com.lubodi.futbollwachu.Instance.Arena;
 import com.lubodi.futbollwachu.team.Team;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
+import org.bukkit.entity.Silverfish;
 import org.bukkit.scheduler.BukkitRunnable;
+import org.bukkit.scheduler.BukkitTask;
 
 import java.util.List;
 import java.util.UUID;
-import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ThreadLocalRandom;
-import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 public class MecanicasSaque {
 
     private Arena arena;
 
-    private Cache<String, Long> preparacionCooldown; // Cache para el cooldown de preparación
-    private Cache<String, Long> ejecucionCooldown;
+    private Boolean saqueRealizado;
+    private Boolean SaqueEnProgreso;
+   private Boolean SaqueVigente;
+    private UUID CobradorDeTiro;
+    private AdministradorDeSaques administradorDeSaques;
 
-    public MecanicasSaque(Arena arena) {
-        preparacionCooldown = CacheBuilder.newBuilder()
-                .expireAfterWrite(10, TimeUnit.SECONDS)
-                .build();
-        ejecucionCooldown = CacheBuilder.newBuilder()
-                .expireAfterWrite(10, TimeUnit.SECONDS)
-                .build();
+    public MecanicasSaque(Arena arena, AdministradorDeSaques administradorDeSaques) {
 
+        this.SaqueEnProgreso = false;
+        this.SaqueVigente = false;
+
+        saqueRealizado = false;
         this.arena = arena;
+        this.CobradorDeTiro = null;
+        this.administradorDeSaques = administradorDeSaques;
     }
 
 
-    /**
-     * Obtiene un jugador aleatorio de un equipo que no sea portero.
-     *
-     * @param equipo el equipo del cual se quiere obtener un jugador aleatorio.
-     * @return un jugador aleatorio del equipo especificado que no sea portero, o null si no se encuentra ninguno.
-     */
-    public Player obtenerJugadorAleatorioNoPortero(Team equipo) {
-        // Obtener el UUID del portero del equipo especificado
-        UUID idPortero = arena.getPorteros().get(equipo);
-        List<UUID> candidatos = new CopyOnWriteArrayList<>();
+    public Player teleportarJugadorAleatorioConPortero(Team equipo) {
+        List<UUID> jugadoresEquipo = arena.getPlayers().stream()
+                .filter(idJugador -> arena.getTeam(Bukkit.getPlayer(idJugador)) == equipo)
+                .collect(Collectors.toList());
 
-        // Iterar sobre los jugadores de la arena
-        for (UUID idJugador : arena.getPlayers()) {
-            // Usar arena.getTeam(Player player) para obtener el equipo del jugador y compararlo con el equipo especificado
-            if (arena.getTeam(Bukkit.getPlayer(idJugador)) == equipo && !idJugador.equals(idPortero)) {
-                candidatos.add(idJugador);
-            }
+        if (jugadoresEquipo.isEmpty()) {
+            return null;  // No se encontró ningún jugador en el equipo.
         }
 
-        if (candidatos.isEmpty()) {
-            return null;  // No se encontró ningún jugador que cumpla con los criterios.
-        }
-
-        // Seleccionar un jugador al azar de los candidatos
-        int indiceAleatorio = ThreadLocalRandom.current().nextInt(candidatos.size());
-        UUID idJugadorAleatorio = candidatos.get(indiceAleatorio);
+        // Seleccionar un jugador al azar del equipo
+        UUID idJugadorAleatorio = jugadoresEquipo.get(ThreadLocalRandom.current().nextInt(jugadoresEquipo.size()));
+        setCobradorDeTiro(idJugadorAleatorio);
         return Bukkit.getPlayer(idJugadorAleatorio);
     }
     /**
@@ -69,15 +57,37 @@ public class MecanicasSaque {
      * @param locacion la locación a la cual el jugador será teleportado.
      * @return true si el jugador fue teletransportado exitosamente, false en caso contrario.
      */
-    public boolean teleportarJugadorAleatorioNoPortero(Team equipo, Location locacion) {
-        Player jugador = obtenerJugadorAleatorioNoPortero(equipo);
-        if (jugador != null) {
-            jugador.teleport(locacion);
+    /**
+     * Teleports a random player (excluding goalkeepers) from a specific team to a given location.
+     *
+     * @param team the team from which to get a random player.
+     * @param location the location to which the player will be teleported.
+     * @return true if the player was teleported successfully, false otherwise.
+     */
+    public boolean teleportarJugadorAleatorioNoPortero(Team team, Location location) {
+        Player player = teleportarJugadorAleatorioConPortero(team);
+        if (player != null) {
+            player.teleport(location);
+            iniciarPreparacionSaque(10);
+            teletransportarBola();
             return true;
         }
         return false;
     }
 
+    public void teletransportarBola() {
+        Location loc = administradorDeSaques.encontrarUbicacionParaSaquedeDesdeJugadores(Bukkit.getPlayer(CobradorDeTiro));
+        obtenerSilverFish().teleport(loc);
+    }
+
+    private boolean verificarCountdownCorriendo() {
+        for (BukkitTask task : Bukkit.getScheduler().getPendingTasks()) {
+            if (task.getOwner().equals(Bukkit.getPluginManager().getPlugin("FutballBola"))) {
+                return true;
+            }
+        }
+        return false;
+    }
 
     /**
      * Inicia una cuenta regresiva para la preparación de un saque, enviando mensajes a todos los jugadores
@@ -86,63 +96,105 @@ public class MecanicasSaque {
      * @param tiempo El tiempo en segundos para la cuenta regresiva.
      */
     public void iniciarPreparacionSaque(int tiempo) {
+        setSaqueEnProgreso(true);
+        setSaqueVigente(true);
+        System.out.println("saque en vigencia");
         new BukkitRunnable() {
+
             int tiempoRestante = tiempo;
 
             @Override
             public void run() {
                 if (tiempoRestante > 0) {
-                    // Envía un mensaje a todos los jugadores con el tiempo restante
                     arena.sendmessage("Saque en " + tiempoRestante + " segundos.");
+                    tiempoRestante--;
                 } else {
-                    // Tiempo finalizado, envía un mensaje final y cancela el temporizador
+                    EjecuciondeSaque(10);
                     arena.sendmessage("¡Saque ahora!");
-                    this.cancel(); // Cancela esta tarea desde su ejecución en el futuro
+                    cancel();
                 }
-
-                tiempoRestante--; // Decrementa el tiempo restante
             }
-            // El temporizador se inicia inmediatamente (0 ticks de delay) y se repite cada 20 ticks (1 segundo)
-        }.runTaskTimer(Bukkit.getPluginManager().getPlugin("FutbollWachu"), 0L, 20L);
+        }.runTaskTimer(Bukkit.getPluginManager().getPlugin("FutballBola"), 0L, 20L);
     }
-    public void EjecuciondeSaque(Team team, int tiempo) {
+    public void EjecuciondeSaque( int tiempo) {
+        setSaqueEnProgreso(false);
         new BukkitRunnable() {
+
+
             int tiempoRestante = tiempo;
 
             @Override
             public void run() {
-                if (tiempoRestante == 0) {
 
-                } else {
+                if(getSaqueRealizado()){
+                    arena.sendmessage("¡Saque realizado!");
+                    setSaqueVigente(false);
+                    this.cancel();
+                }
+
+                if (tiempoRestante == 0){
+                    Team equipo = arena.getTeam(Bukkit.getPlayer(CobradorDeTiro)) == Team.RED ? Team.BLUE : Team.RED;
+                    arena.sendmessage("¡Saque el saque no fue realizado, cambio de equipo! a equipo " + equipo);
+                    teleportarJugadorAleatorioNoPortero(equipo, administradorDeSaques.encontrarUbicacionParaSaqueDeBanda(Bukkit.getPlayer(CobradorDeTiro)));
                     // Tiempo finalizado, envía un mensaje final y cancela el temporizador
-                    arena.sendmessage("¡Saque ahora!");
                     this.cancel(); // Cancela esta tarea desde su ejecución en el futuro
                 }
 
                 tiempoRestante--; // Decrementa el tiempo restante
             }
             // El temporizador se inicia inmediatamente (0 ticks de delay) y se repite cada 20 ticks (1 segundo)
-        }.runTaskTimer(Bukkit.getPluginManager().getPlugin("FutbollWachu"), 0L, 20L);
+        }.runTaskTimer(Bukkit.getPluginManager().getPlugin("FutballBola"), 0L, 20L);
+    }
+
+  public Silverfish obtenerSilverFish() {
+      Silverfish silverfish = arena.getBolas().values().stream().findFirst().get();
+      return silverfish;
+  }
+    public void saqueRealizado(Boolean saqueRealizado) {
+        this.saqueRealizado = saqueRealizado;
     }
 
 
-
-    public void activarCooldownPreparacion(Player jugador) {
-        preparacionCooldown.put(jugador.getName(), System.currentTimeMillis());
+    public void setCobradorDeTiro(UUID cobradorDeTiro) {
+        CobradorDeTiro = cobradorDeTiro;
     }
 
-    public void activarCooldownEjecucion(Player jugador) {
-        ejecucionCooldown.put(jugador.getName(), System.currentTimeMillis());
+    public UUID getCobradorDeTiro() {
+        return CobradorDeTiro;
     }
 
-    public boolean puedePrepararSaque(Player jugador) {
-        return preparacionCooldown.getIfPresent(jugador.getName()) == null;
+    public Boolean getSaqueRealizado() {
+        return saqueRealizado;
     }
 
-    public boolean puedeEjecutarSaque(Player jugador) {
-        return ejecucionCooldown.getIfPresent(jugador.getName()) == null;
+    public void setSaqueRealizado(Boolean saqueRealizado) {
+        this.saqueRealizado = saqueRealizado;
+    }
+
+    public Boolean getSaqueEnProgreso() {
+        return SaqueEnProgreso;
+    }
+
+    public void setSaqueEnProgreso(Boolean saqueEnProgreso) {
+        SaqueEnProgreso = saqueEnProgreso;
+    }
+
+    public Boolean getSaqueVigente() {
+        return SaqueVigente;
+    }
+
+    public void setSaqueVigente(Boolean saqueVigente) {
+        SaqueVigente = saqueVigente;
+    }
+    public Boolean isSaqueVigente(){
+        return SaqueVigente;
+    }
+    public Boolean isSaqueEnProgreso(){
+        return SaqueEnProgreso;
     }
 }
+
+
 /*
     usaremos la clase lasthitter para ver quien golpeo la pelota y extraer su equipo
     tambien veremos en que zona salio en las partes del rectangulo y con un switch decidiremos que caso es

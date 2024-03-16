@@ -78,7 +78,6 @@ public class Game {
         arena.updateScores(opposingTeam, currentPoints);
         addPoint(opposingTeam);
         // Elimina la entidad "Bola"
-        arena.placeRedstoneBlock(arena.getSpeackerGoal());
         Player player = arena.getLastHitters();
         if(player != null) {
            arena.sendmessage(player.getName() + " ha metido el gol");
