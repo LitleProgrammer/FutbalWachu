@@ -332,4 +332,8 @@ public class AdministradorZonas {
     public Set<Location> getEsquinasZonaVerticalDerecha() {
         return obtenerEsquinasDeRegion(getZonaVerticalDerecha());
     }
+
+    public boolean isEntityInZonaGeneralExterior(Entity entity) {
+        return zonaGeneralExterior.contains(entity);
+    }
 }

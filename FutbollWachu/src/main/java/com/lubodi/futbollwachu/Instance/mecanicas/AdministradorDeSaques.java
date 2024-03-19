@@ -209,9 +209,9 @@ public class AdministradorDeSaques {
         return esquinaGeneralMasCercana;
     }
 
-    public Location encontrarUbicacionParaSaquedeDesdeJugadores(Player player) {
+    public Location encontrarUbicacionParaSaquedeDesdeJugadores(Player player, double distancia) {
         Location zBordeCercano = encontrarUbicacionParaSaqueDeBanda(player);
-        double adelantamiento = administradorZonas.getZonaHorizontalSuperior().contains(player) ? -2.0 : 2.0;
+        double adelantamiento = administradorZonas.getZonaHorizontalSuperior().contains(player) ? -distancia: distancia;
         double nuevaZ = zBordeCercano.getZ() + adelantamiento;
 
         return new Location(zBordeCercano.getWorld(), zBordeCercano.getX(), zBordeCercano.getY(), nuevaZ);
@@ -223,6 +223,9 @@ public class AdministradorDeSaques {
 
     public MecanicasSaque getMecanicasSaque() {
         return mecanicas;
+    }
+    public AdministradorZonas getAdministradorZonas() {
+        return administradorZonas;
     }
 
     public enum ZonaTipo {

@@ -14,6 +14,7 @@ import com.lubodi.futbollwachu.HabilidadesFutbol.Listeners.HabilidadHandClickLis
 import com.lubodi.futbollwachu.Instance.mecanicas.MecanicasSaque;
 import com.lubodi.futbollwachu.Listeners.ConnectListener;
 import com.lubodi.futbollwachu.Listeners.GameListener;
+import com.lubodi.futbollwachu.Listeners.MoveListener;
 import com.lubodi.futbollwachu.Listeners.SaqueListener;
 import com.lubodi.futbollwachu.Manager.ArenaManager;
 import com.lubodi.futbollwachu.Manager.ConfigManager;
@@ -57,6 +58,7 @@ public final class FutballBola extends JavaPlugin {
         getServer().getPluginManager().registerEvents(new HabilidadHandClickListener(this, HabilidadesManager.getInstance()), this);
         getServer().getPluginManager().registerEvents(new HabilidadGUI(this, HabilidadesManager.getInstance()), this);
         getServer().getPluginManager().registerEvents(new SaqueListener(this), this);
+        getServer().getPluginManager().registerEvents(new MoveListener(this), this);
         getCommand("arena").setExecutor(new ArenaCommand(this));
     }
 

@@ -24,6 +24,7 @@ public class MecanicasSaque {
     private UUID CobradorDeTiro;
     private AdministradorDeSaques administradorDeSaques;
 
+
     public MecanicasSaque(Arena arena, AdministradorDeSaques administradorDeSaques) {
 
         this.SaqueEnProgreso = false;
@@ -76,7 +77,7 @@ public class MecanicasSaque {
     }
 
     public void teletransportarBola() {
-        Location loc = administradorDeSaques.encontrarUbicacionParaSaquedeDesdeJugadores(Bukkit.getPlayer(CobradorDeTiro));
+        Location loc = administradorDeSaques.encontrarUbicacionParaSaquedeDesdeJugadores(Bukkit.getPlayer(CobradorDeTiro),2.5);
         obtenerSilverFish().teleport(loc);
     }
 
@@ -96,6 +97,7 @@ public class MecanicasSaque {
      * @param tiempo El tiempo en segundos para la cuenta regresiva.
      */
     public void iniciarPreparacionSaque(int tiempo) {
+        setCollidable(false);
         setSaqueEnProgreso(true);
         setSaqueVigente(true);
         System.out.println("saque en vigencia");
@@ -129,12 +131,16 @@ public class MecanicasSaque {
                 if(getSaqueRealizado()){
                     arena.sendmessage("¡Saque realizado!");
                     setSaqueVigente(false);
+                    setSaqueRealizado(false);
+
                     this.cancel();
                 }
 
                 if (tiempoRestante == 0){
                     Team equipo = arena.getTeam(Bukkit.getPlayer(CobradorDeTiro)) == Team.RED ? Team.BLUE : Team.RED;
                     arena.sendmessage("¡Saque el saque no fue realizado, cambio de equipo! a equipo " + equipo);
+                    Location loc = administradorDeSaques.encontrarUbicacionParaSaquedeDesdeJugadores(Bukkit.getPlayer(CobradorDeTiro),8);
+                    Bukkit.getPlayer(CobradorDeTiro).teleport(loc);
                     teleportarJugadorAleatorioNoPortero(equipo, administradorDeSaques.encontrarUbicacionParaSaqueDeBanda(Bukkit.getPlayer(CobradorDeTiro)));
                     // Tiempo finalizado, envía un mensaje final y cancela el temporizador
                     this.cancel(); // Cancela esta tarea desde su ejecución en el futuro
@@ -149,6 +155,11 @@ public class MecanicasSaque {
   public Silverfish obtenerSilverFish() {
       Silverfish silverfish = arena.getBolas().values().stream().findFirst().get();
       return silverfish;
+  }
+
+  public void setCollidable(boolean collidable) {
+      Silverfish silverfish = obtenerSilverFish();
+      silverfish.setCollidable(collidable);
   }
     public void saqueRealizado(Boolean saqueRealizado) {
         this.saqueRealizado = saqueRealizado;
