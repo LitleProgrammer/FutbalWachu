@@ -12,19 +12,20 @@ lobby-spawn:
   pitch: 0
 arenas:
   0:
+    name: 'default'
     world: 'world'
     teams:
       RED:
         zona:
           world: 'world'
-          x: -86
+          x: -87
           y: 41
-          z: 900
+          z: 855
           yaw: -180
           pitch: 0
-          x2: -45
+          x2: -46
           y2: 51
-          z2: 856
+          z2: 901
           yaw2: -180
           pitch2: 0
         portero:
@@ -59,21 +60,21 @@ arenas:
           z: 901
           yaw: -180
           pitch: 0
-          x2: -4
+          x2: -3
           y2: 51
-          z2: 856
+          z2: 855
           yaw2: -180
           pitch2: 0
         portero:
           world: 'world'
-          x: -3
+          x: -14
           y: 41
-          z: 86
+          z: 887
           yaw: -180
           pitch: 0
-          x2: -14
+          x2: -4
           y2: 46
-          z2: 887
+          z2: 869
           yaw2: -180
           pitch2: 0
         cancha:

@@ -24,6 +24,7 @@ public class ArenaManager {
     public ArenaManager(FutballBola minigame){
         FileConfiguration config = minigame.getConfig();
         for (String str: config.getConfigurationSection("arenas.").getKeys(false)){
+            String arenaName = config.getString("arenas." + str + ".name");
             String worldName = config.getString("arenas." + str + ".world");
             World world = Bukkit.getWorld(worldName);
             ConcurrentHashMap<Team, Region> zones = new  ConcurrentHashMap<>();
@@ -104,7 +105,7 @@ public class ArenaManager {
                     (float)config.getDouble("arenas."+str+".spawn.yaw"),
                     (float)config.getDouble("arenas."+str+".spawn.pitch")
             );
-            arenas.add(new Arena(minigame,Integer.parseInt(str),portero, canchas, ballSpawn, spawn, zones));
+            arenas.add(new Arena(minigame,Integer.parseInt(str), arenaName, portero, canchas, ballSpawn, spawn, zones));
         }
     }
 
@@ -115,6 +116,15 @@ public class ArenaManager {
     public Arena getArena(int id) {
         for (Arena arena : arenas) {
             if (arena.getId() == id) {
+                return arena;
+            }
+        }
+        return null;
+    }
+
+    public Arena getArena(String name) {
+        for (Arena arena : arenas) {
+            if (arena.getName().equalsIgnoreCase(name)) {
                 return arena;
             }
         }

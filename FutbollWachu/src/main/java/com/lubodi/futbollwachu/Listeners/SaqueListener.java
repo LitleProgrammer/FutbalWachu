@@ -4,9 +4,7 @@ import com.lubodi.futbollwachu.FutballBola;
 import com.lubodi.futbollwachu.Instance.Arena;
 import com.lubodi.futbollwachu.Instance.mecanicas.AdministradorDeSaques;
 import com.lubodi.futbollwachu.Instance.mecanicas.MecanicasSaque;
-import org.bukkit.Bukkit;
 import org.bukkit.Location;
-import org.bukkit.Sound;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Silverfish;
@@ -17,9 +15,6 @@ import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.player.PlayerInteractEntityEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.util.Vector;
-
-import java.util.HashMap;
-import java.util.UUID;
 
 public class SaqueListener implements Listener {
 
@@ -53,7 +48,7 @@ public class SaqueListener implements Listener {
                 else if(jugador.getUniqueId().equals(mecanicasSaque.getCobradorDeTiro())){
                     mecanicasSaque.setCollidable(true);
                     mecanicasSaque.setSaqueRealizado(true);
-            }
+                }
             }
         }
     }
@@ -133,5 +128,4 @@ public class SaqueListener implements Listener {
 
 
     }
-    }
-
+}

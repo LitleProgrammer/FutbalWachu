@@ -89,7 +89,7 @@ public enum Fuerza implements Habilidad {
                     Vector direccion = jugadorLocation.getDirection();
                     direccion.multiply(this.potencia);
 
-                    Vector finalVelocity = direccion.clone().add(new Vector(0, 0.5 * potencia, 0));
+                    Vector finalVelocity = direccion.add(new Vector(0, 0.5 * potencia, 0));
                     silverfish.setVelocity(finalVelocity);
                 }
             }

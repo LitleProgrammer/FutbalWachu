@@ -1,5 +1,6 @@
 package com.lubodi.futbollwachu.Instance.mecanicas;
 
+import com.lubodi.futbollwachu.GameState;
 import com.lubodi.futbollwachu.Instance.Arena;
 import com.lubodi.futbollwachu.team.Team;
 import org.bukkit.Bukkit;
@@ -20,7 +21,7 @@ public class MecanicasSaque {
 
     private Boolean saqueRealizado;
     private Boolean SaqueEnProgreso;
-   private Boolean SaqueVigente;
+    private Boolean SaqueVigente;
     private UUID CobradorDeTiro;
     private AdministradorDeSaques administradorDeSaques;
 
@@ -35,6 +36,27 @@ public class MecanicasSaque {
         this.CobradorDeTiro = null;
         this.administradorDeSaques = administradorDeSaques;
     }
+
+    public Player teleportarJugadorNoPortero(Team equipo) {
+        List<UUID> jugadoresEquipo = arena.getPlayers().stream()
+                .filter(idJugador -> arena.getTeam(Bukkit.getPlayer(idJugador)) == equipo)
+                .collect(Collectors.toList());
+        if (jugadoresEquipo.isEmpty()) {
+            return null;
+        }
+        UUID idJugadorAleatorio = jugadoresEquipo.get(ThreadLocalRandom.current().nextInt(jugadoresEquipo.size()));
+        setCobradorDeTiro(idJugadorAleatorio);
+        return Bukkit.getPlayer(idJugadorAleatorio);
+    }
+
+    public Player obtenerPortero(Team equipo) {
+        UUID idPortero = arena.getPorteros().get(equipo);
+        if (idPortero != null) {
+            return Bukkit.getPlayer(idPortero);
+        }
+        return null;
+    }
+
 
 
     public Player teleportarJugadorAleatorioConPortero(Team equipo) {
@@ -51,6 +73,9 @@ public class MecanicasSaque {
         setCobradorDeTiro(idJugadorAleatorio);
         return Bukkit.getPlayer(idJugadorAleatorio);
     }
+
+
+
     /**
      * Teleporta a un jugador aleatorio (que no sea portero) de un equipo específico a una locación dada.
      *
@@ -61,19 +86,36 @@ public class MecanicasSaque {
     /**
      * Teleports a random player (excluding goalkeepers) from a specific team to a given location.
      *
-     * @param team the team from which to get a random player.
+     * @param team     the team from which to get a random player.
      * @param location the location to which the player will be teleported.
-     * @return true if the player was teleported successfully, false otherwise.
      */
-    public boolean teleportarJugadorAleatorioNoPortero(Team team, Location location) {
+    public void teleportarJugadorAleatorioNoPortero(Team team, Location location) {
         Player player = teleportarJugadorAleatorioConPortero(team);
         if (player != null) {
             player.teleport(location);
             iniciarPreparacionSaque(10);
-            teletransportarBola();
-            return true;
+
         }
-        return false;
+    }
+
+    public void teleportarPortero(Team team, Location location) {
+        UUID goalkeeper =  arena.getPorteros().get(team);
+        if (goalkeeper != null) {
+            Player goalkeeperPlayer = Bukkit.getPlayer(goalkeeper);
+            assert goalkeeperPlayer != null;
+            goalkeeperPlayer.teleport(location);
+            setCobradorDeTiro(goalkeeper);
+            obtenerSilverFish().teleport(location);
+            goalkeeperPlayer.addPassenger(obtenerSilverFish());
+
+            // Crear un BukkitRunnable para quitar al SilverFish como pasajero después de un cierto tiempo
+            new BukkitRunnable() {
+                @Override
+                public void run() {
+                    goalkeeperPlayer.eject();
+                }
+            }.runTaskLater(Bukkit.getPluginManager().getPlugin("FutbollWachu"), 50L); // Cambia el número 20L por el tiempo en ticks que quieras esperar antes de quitar al pasajero
+        }
     }
 
     public void teletransportarBola() {
@@ -81,14 +123,7 @@ public class MecanicasSaque {
         obtenerSilverFish().teleport(loc);
     }
 
-    private boolean verificarCountdownCorriendo() {
-        for (BukkitTask task : Bukkit.getScheduler().getPendingTasks()) {
-            if (task.getOwner().equals(Bukkit.getPluginManager().getPlugin("FutballBola"))) {
-                return true;
-            }
-        }
-        return false;
-    }
+
 
     /**
      * Inicia una cuenta regresiva para la preparación de un saque, enviando mensajes a todos los jugadores
@@ -100,6 +135,7 @@ public class MecanicasSaque {
         setCollidable(false);
         setSaqueEnProgreso(true);
         setSaqueVigente(true);
+        teletransportarBola();
         System.out.println("saque en vigencia");
         new BukkitRunnable() {
 
@@ -107,6 +143,11 @@ public class MecanicasSaque {
 
             @Override
             public void run() {
+                if(arena.getState()  != GameState.LIVE) {
+                    setSaqueVigente(false);
+                    setSaqueRealizado(false);
+                    this.cancel();
+                }
                 if (tiempoRestante > 0) {
                     arena.sendmessage("Saque en " + tiempoRestante + " segundos.");
                     tiempoRestante--;
@@ -128,7 +169,7 @@ public class MecanicasSaque {
             @Override
             public void run() {
 
-                if(getSaqueRealizado()){
+                if(getSaqueRealizado() || arena.getState() != GameState.LIVE) {
                     arena.sendmessage("¡Saque realizado!");
                     setSaqueVigente(false);
                     setSaqueRealizado(false);
@@ -152,15 +193,15 @@ public class MecanicasSaque {
         }.runTaskTimer(Bukkit.getPluginManager().getPlugin("FutballBola"), 0L, 20L);
     }
 
-  public Silverfish obtenerSilverFish() {
-      Silverfish silverfish = arena.getBolas().values().stream().findFirst().get();
-      return silverfish;
-  }
+    public Silverfish obtenerSilverFish() {
+        Silverfish silverfish = arena.getBolas().values().stream().findFirst().get();
+        return silverfish;
+    }
 
-  public void setCollidable(boolean collidable) {
-      Silverfish silverfish = obtenerSilverFish();
-      silverfish.setCollidable(collidable);
-  }
+    public void setCollidable(boolean collidable) {
+        Silverfish silverfish = obtenerSilverFish();
+        silverfish.setCollidable(collidable);
+    }
     public void saqueRealizado(Boolean saqueRealizado) {
         this.saqueRealizado = saqueRealizado;
     }
@@ -204,6 +245,7 @@ public class MecanicasSaque {
         return SaqueEnProgreso;
     }
 }
+
 
 
 /*

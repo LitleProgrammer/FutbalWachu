@@ -16,9 +16,7 @@ import com.lubodi.futbollwachu.team.Team;
 import net.md_5.bungee.api.ChatColor;
 import org.bukkit.*;
 import org.bukkit.block.Block;
-import org.bukkit.boss.BarColor;
-import org.bukkit.boss.BarStyle;
-import org.bukkit.boss.BossBar;
+
 import org.bukkit.entity.*;
 import org.bukkit.scoreboard.*;
 
@@ -35,15 +33,12 @@ public class Arena {
      */
     private final ConcurrentHashMap<Team, Region> portero;
 
-    /**
-     * Barra de jefe del juego.
-     */
-    private BossBar bossBar;
+
 
     /**
      * Scoreboard del juego.
      */
-    private Scoreboard scoreboard;
+    private final Scoreboard scoreboard;
 
     /**
      * Objetivo del scoreboard.
@@ -53,37 +48,39 @@ public class Arena {
     /**
      * Instancia del juego FutballBola.
      */
-    private FutballBola minigame;
+    private final FutballBola minigame;
 
-    /**
-     * Instancia estática de la arena.
-     */
-    private static Arena instance;
+
 
     /**
      * ID de la arena.
      */
-    private int id;
+    private final int id;
+
+    /**
+     * Nom de la arena.
+     */
+    private final  String name;
 
     /**
      * Mapa concurrente que almacena las canchas de cada equipo.
      */
-    private ConcurrentHashMap<Team, Region> canchas;
+    private final ConcurrentHashMap<Team, Region> canchas;
 
     /**
      * Ubicación de generación del balón.
      */
-    private Location ballSpawn;
+    private final Location ballSpawn;
 
     /**
      * Ubicación de generación de jugadores.
      */
-    private Location spawn;
+    private final Location spawn;
 
     /**
      * Mapa concurrente que almacena las zonas de cada equipo.
      */
-    private ConcurrentHashMap<Team, Region> zones;
+    private final ConcurrentHashMap<Team, Region> zones;
 
     /**
      * Instancia del juego.
@@ -147,8 +144,8 @@ public class Arena {
 
 
 
-    private Map<UUID, Silverfish> bolas;
-    private AdministradorDeSaques tiros;
+    private final Map<UUID, Silverfish> bolas;
+    private final AdministradorDeSaques tiros;
         /**
          * Constructor de la clase Arena.
          *
@@ -161,8 +158,9 @@ public class Arena {
 
          */
 
-    public Arena(FutballBola minigame, int id,ConcurrentHashMap<Team, Region> portero, ConcurrentHashMap<Team, Region> canchas, Location ballSpawn, Location spawn, ConcurrentHashMap<Team, Region> zones) {
+    public Arena(FutballBola minigame, int id, String name,ConcurrentHashMap<Team, Region> portero, ConcurrentHashMap<Team, Region> canchas, Location ballSpawn, Location spawn, ConcurrentHashMap<Team, Region> zones) {
         this.id = id;
+        this.name = name;
         this.metodos = new Metodos(minigame, minigame.getFisicas());
         this.minigame = minigame;
         this.portero = portero;
@@ -179,7 +177,7 @@ public class Arena {
         this.countdown = new Countdown(minigame, this);
         this.countdownGame = new CountdownGame(minigame, this, game);
         this.countdownEnd = new CountdownEnd(minigame, this, game);
-        this.scoreboard = Bukkit.getScoreboardManager().getNewScoreboard();
+        this.scoreboard = Objects.requireNonNull(Bukkit.getScoreboardManager()).getNewScoreboard();
         this.objective = this.scoreboard.registerNewObjective("Marcador", "dummy", "Puntos");
         this.objective.setDisplaySlot(DisplaySlot.SIDEBAR);
         this.habilidades = HabilidadesManager.getInstance();
@@ -190,7 +188,7 @@ public class Arena {
         }
         Score timeScore = this.objective.getScore("Tiempo:");
         timeScore.setScore(ConfigManager.getCountDownGameSeconds());
-        this.bossBar = Bukkit.createBossBar(ChatColor.GREEN + "Tiempo de partido", BarColor.GREEN, BarStyle.SOLID);
+
         this.tiros = new AdministradorDeSaques(this);
     }
 
@@ -202,7 +200,7 @@ public class Arena {
         countdownEnd.start();
     }
 
-    public void Start() {;
+    public void Start() {
         game.start();
     }
 
@@ -248,7 +246,7 @@ public class Arena {
                 if (player != null) {
                     player.teleport(loc);
                     habilidades.eliminarTodasLasHabilidades(player.getUniqueId());
-                    player.setScoreboard(Bukkit.getScoreboardManager().getMainScoreboard());
+                    player.setScoreboard(Objects.requireNonNull(Bukkit.getScoreboardManager()).getMainScoreboard());
                 }
             }
 
@@ -261,7 +259,7 @@ public class Arena {
             countdown.cancel();
         }
 
-        bossBar = Bukkit.createBossBar(ChatColor.GREEN + "Tiempo de partido", BarColor.GREEN, BarStyle.SOLID);
+
         eliminarScoreboard("Marcador");
         objective = scoreboard.registerNewObjective("Marcador", "dummy", "Puntos");
         objective.setDisplaySlot(DisplaySlot.SIDEBAR);
@@ -317,14 +315,8 @@ public class Arena {
             }
         }
     }
-    /**
-     * Get the game object.
-     *
-     * @return         	the game object
-     */
-    public Game getGame() {
-        return game;
-    }
+
+
 
     /**
      * Sets the team for a player and removes the player from any existing team.
@@ -342,9 +334,7 @@ public class Arena {
      * @param  player	the player whose team is to be removed
      */
     public void removeTeam(Player player) {
-        if (teams.containsKey(player.getUniqueId())) {
-            teams.remove(player.getUniqueId());
-        }
+        teams.remove(player.getUniqueId());
     }
     /**
      * Removes the team associated with the specified player.
@@ -377,16 +367,13 @@ public class Arena {
     public ConcurrentHashMap<Team, Region> getZones() {
         return zones;
     }
-    /**
-     * Spawns a ball and performs various actions such as particle effects, sound, and player teleportation.
-     *
-     * @return         	void
-     */
+
     public void spawnearbola() {
         Bukkit.getScheduler().scheduleSyncDelayedTask(minigame, () -> {
             Silverfish bola = metodos.spawnSilverfishAtLocation(ballSpawn);
             bolas.put(bola.getUniqueId(), bola);
             World world = ballSpawn.getWorld();
+            assert world != null;
             world.spawnParticle(Particle.REDSTONE,
                     ballSpawn,
                     100, // Cantidad de partículas
@@ -415,13 +402,12 @@ public class Arena {
      */
 
     public Team getTeamOfCancha(Entity entity) {
-        if (entity instanceof Silverfish && entity.getCustomName().equals("Bola")) {
+        if (entity instanceof Silverfish && Objects.equals(entity.getCustomName(), "Bola")) {
             for (Map.Entry<Team, Region> entry : this.canchas.entrySet()) {
                 Region cancha = entry.getValue();
                 if (cancha.contains(entity)) {
-                    Team team = entry.getKey();
 
-                    return team;
+                    return entry.getKey();
                 }
             }
         }
@@ -553,31 +539,10 @@ public class Arena {
             scoreboard.getObjective(nombreMarcador).unregister();
         }
     }
-    /**
-     * Adds players to the boss bar for each player in the list of UUIDs.
-     *
-     * @return             void
-     */
-    public void addPlayersToBossBar() {
-        for (UUID playerUUID : players) {
-            Player player = Bukkit.getPlayer(playerUUID);
-            if (player != null) {
-                bossBar.addPlayer(player);
-            }
-        }
-    }
-    /**
-     * Removes players from the boss bar.
-     *
-     */
-    public void removePlayersFromBossBar() {
-        for (UUID playerUUID : players) {
-            Player player = Bukkit.getPlayer(playerUUID);
-            if (player != null) {
-                bossBar.removePlayer(player);
-            }
-        }
-    }
+
+
+
+
     /**
      * Teleports the player to an equivalent location in the target region based on the distances to the corners of the source region.
      *
@@ -611,7 +576,6 @@ public class Arena {
      * Check and teleport the player if they are not in their team's region.
      *
      * @param  player  the player to check and potentially teleport
-     * @return         void, no return value
      */
     public void checkAndTeleportPlayer(Player player) {
         Team playerTeam = teams.get(player.getUniqueId());
@@ -642,7 +606,6 @@ public class Arena {
      * SoltarBola method releases the ball for the player after a delay of 60 ticks.
      *
      * @param  player   the player for whom the ball is released
-     * @return          void
      */
     public static void SoltarBola(Player player) {
         FutballBola plugin = FutballBola.getInstance();
@@ -652,53 +615,18 @@ public class Arena {
             }
         }, 60);
     }
-    /**
-     * Kills nearby silverfish entities within a specified range of a given location.
-     *
-     * @param  location   the location around which to search for silverfish entities
-     * @param range       the range within which to search for silverfish entities
-     */
-    public void matarSilverfish(Location location, double range) {
-        List<Entity> nearbyEntities = (List<Entity>) location.getWorld().getNearbyEntities(location, range, range, range);
-        for (Entity entity : nearbyEntities) {
-            if (entity.getType() == EntityType.SILVERFISH) {
-                ((LivingEntity) entity).setHealth(0);
-            }
+
+    public void matarSilverfish() {
+        for (Silverfish silverfish : bolas.values()) {
+            silverfish.remove();
         }
+        bolas.clear();
     }
-    /**
-     * A function to place a redstone block at the specified location.
-     *
-     * @param  location   the location where the redstone block will be placed
-     */
-    public void placeRedstoneBlock(Location location) {
-        // Comprueba si el mundo es válido
-        System.out.println(location.toString());
-        System.out.println("probando");
-        World world = location.getWorld();
-        Block block = world.getBlockAt(location);
 
-// Cambia el tipo de bloque
-        block.setType(Material.REDSTONE_BLOCK);
-    }
-    /**
-     * Removes a redstone block at the given location.
-     *
-     * @param  location  the location of the redstone block
-     * @return           void
-     */
-    public void removeRedstoneBlock(Location location) {
-        // Comprueba si el mundo es válido
-        World world = location.getWorld();
-        Block block = world.getBlockAt(location);
 
-// Cambia el tipo de bloque
-        block.setType(Material.AIR);
 
-    }
 
     public void IniciarTirosLibres() {
-        System.out.printf("hola me estoy ejecutando");
         tiros.ejecutarAccion();
     }
 
@@ -710,8 +638,8 @@ public class Arena {
         return bolas;
     }
 
-    public Region getPorteroRegion(Team equipoPortero) {
-        return portero.get(equipoPortero);
+    public Region getPorteroRegion(Team team) {
+        return portero.get(team);
     }
 
     public ConcurrentHashMap<Team, UUID> getPorteros() {
@@ -727,9 +655,7 @@ public class Arena {
         return lastHitters;
     }
 
-    public void updateBossBar(int value) {
-        bossBar.setProgress(value / 100.0);
-    }
+
     public List<UUID> getPlayers() {
         return players;
     }
@@ -738,28 +664,22 @@ public class Arena {
         return id;
     }
 
-    public Region getRegionCancha(Team team) {
-        return canchas.get(team);
+    public String getName() {
+        return name;
     }
+
+
 
     public Region getRegionZona(Team team) {
         return zones.get(team);
     }
-    public ConcurrentHashMap<Team, Region> getCanchas() {
-        return canchas;
-    }
 
-    public ConcurrentHashMap<Team, Region> getZonas() {
-        return zones;
-    }
 
-    public Location getBallSpawn() {
-        return ballSpawn;
-    }
 
-    public Location getSpawn() {
-        return spawn;
-    }
+
+
+
+
 
     public GameState getState() {
         return state;
@@ -767,7 +687,6 @@ public class Arena {
     public void setState(GameState state) {
         this.state = state;
     }
-
 
 
 }

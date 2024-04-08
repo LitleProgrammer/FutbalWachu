@@ -6,19 +6,26 @@ package com.lubodi.futbollwachu;
 import com.lubodi.futbollwachu.BolaFisicasYMetodos.Fisicas;
 
 import com.lubodi.futbollwachu.BolaFisicasYMetodos.Metodos;
+import com.lubodi.futbollwachu.Commands.AdminArenaTab;
 import com.lubodi.futbollwachu.Commands.ArenaCommand;
+import com.lubodi.futbollwachu.Commands.AdminArenaCommand;
 import com.lubodi.futbollwachu.HabilidadesFutbol.Commands.ComandoFutbol;
 import com.lubodi.futbollwachu.HabilidadesFutbol.GUI.HabilidadGUI;
 import com.lubodi.futbollwachu.HabilidadesFutbol.Interfaces.HabilidadesManager;
 import com.lubodi.futbollwachu.HabilidadesFutbol.Listeners.HabilidadHandClickListener;
+import com.lubodi.futbollwachu.HabilidadesFutbol.Listeners.Mecanics.ClickEventBall.onBolaLeftClickEvent;
+import com.lubodi.futbollwachu.HabilidadesFutbol.Listeners.Mecanics.ClickEventBall.onBolaRigthClickEvent;
+import com.lubodi.futbollwachu.HabilidadesFutbol.Listeners.Mecanics.DropItem.DropItemEvent;
+import com.lubodi.futbollwachu.HabilidadesFutbol.Listeners.Mecanics.itemSiwch.SwichItemEvent;
 import com.lubodi.futbollwachu.Instance.mecanicas.MecanicasSaque;
 import com.lubodi.futbollwachu.Listeners.ConnectListener;
 import com.lubodi.futbollwachu.Listeners.GameListener;
-import com.lubodi.futbollwachu.Listeners.MoveListener;
 import com.lubodi.futbollwachu.Listeners.SaqueListener;
 import com.lubodi.futbollwachu.Manager.ArenaManager;
 import com.lubodi.futbollwachu.Manager.ConfigManager;
 import org.bukkit.plugin.java.JavaPlugin;
+
+import java.util.HashMap;
 
 public final class FutballBola extends JavaPlugin {
     private static FutballBola instance;
@@ -26,6 +33,8 @@ public final class FutballBola extends JavaPlugin {
     private Metodos metodos;
     private ArenaManager arenaManager;
     private MecanicasSaque mecanicasSaque;
+    // A map containing arenas, that are being set up <String arenaName, Integer arenaID>
+    private HashMap<String, Integer> setupArenas = new HashMap<>();
 
 
 
@@ -40,7 +49,7 @@ public final class FutballBola extends JavaPlugin {
     public void onEnable() {
 
 
-        ConfigManager.setupConfig(this);
+        ConfigManager.setupConfig(this, this);
 
         fisicas = new Fisicas();
         arenaManager = new ArenaManager(this);
@@ -51,14 +60,19 @@ public final class FutballBola extends JavaPlugin {
         // No need to create instances here, as they are injected through the constructor
         getServer().getPluginManager().registerEvents(new Metodos(this, getFisicas()), this);
         getCommand("futbol").setExecutor(new ComandoFutbol(this, metodos));
+        getCommand("adminArena").setExecutor(new AdminArenaCommand(this));
+        getCommand("adminArena").setTabCompleter(new AdminArenaTab(this));
 
         // Register events.
         getServer().getPluginManager().registerEvents(new ConnectListener(this), this);
         getServer().getPluginManager().registerEvents(new GameListener(this), this);
-        getServer().getPluginManager().registerEvents(new HabilidadHandClickListener(this, HabilidadesManager.getInstance()), this);
+        getServer().getPluginManager().registerEvents(new SwichItemEvent(this, HabilidadesManager.getInstance()), this);
+        getServer().getPluginManager().registerEvents(new onBolaLeftClickEvent(this, HabilidadesManager.getInstance()), this);
+        getServer().getPluginManager().registerEvents(new onBolaRigthClickEvent(this, HabilidadesManager.getInstance()), this);
+        getServer().getPluginManager().registerEvents(new DropItemEvent(this, HabilidadesManager.getInstance()), this);
+
         getServer().getPluginManager().registerEvents(new HabilidadGUI(this, HabilidadesManager.getInstance()), this);
         getServer().getPluginManager().registerEvents(new SaqueListener(this), this);
-        getServer().getPluginManager().registerEvents(new MoveListener(this), this);
         getCommand("arena").setExecutor(new ArenaCommand(this));
     }
 
@@ -78,4 +92,11 @@ public final class FutballBola extends JavaPlugin {
         return getInstance().mecanicasSaque;
     }
 
+    public void setArenaManager(ArenaManager arenaManager) {
+        this.arenaManager = arenaManager;
+    }
+
+    public HashMap<String, Integer> getSetupArenas() {
+        return setupArenas;
+    }
 }

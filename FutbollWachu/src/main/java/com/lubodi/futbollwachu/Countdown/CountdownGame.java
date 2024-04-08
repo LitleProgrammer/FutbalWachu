@@ -54,7 +54,7 @@ public class CountdownGame extends BukkitRunnable {
                 arenas.sendTitle("Empate", "");
             }
             arenas.startCountdownEndGame();
-            arenas.matarSilverfish(arenas.getBallSpawn(), 80);
+            arenas.matarSilverfish();
             return;
         }
 

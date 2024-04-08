@@ -7,3 +7,5 @@ commands:
     description: Comando principal
   futbol:
     description: Comando principal de fútbol
+  adminArena:
+    description: Only for OP's used to create a new arena

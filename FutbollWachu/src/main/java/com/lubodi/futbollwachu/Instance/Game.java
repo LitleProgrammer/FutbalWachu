@@ -82,6 +82,7 @@ public class Game {
         if(player != null) {
            arena.sendmessage(player.getName() + " ha metido el gol");
         }
+        arena.getBolas().remove(entity.getUniqueId());
         entity.remove();
         arena.spawnearbola();
     }

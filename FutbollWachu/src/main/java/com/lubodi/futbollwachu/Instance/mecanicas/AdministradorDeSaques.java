@@ -1,7 +1,5 @@
 package com.lubodi.futbollwachu.Instance.mecanicas;
 
-import com.google.common.cache.Cache;
-import com.google.common.cache.CacheBuilder;
 import com.lubodi.futbollwachu.Instance.Arena;
 import com.lubodi.futbollwachu.Manager.Region;
 import com.lubodi.futbollwachu.team.Team;
@@ -12,15 +10,15 @@ import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Silverfish;
 
-import java.util.HashSet;
+
+import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.TimeUnit;
 
 public class AdministradorDeSaques {
 
-    private MecanicasSaque mecanicas;
+    private final MecanicasSaque mecanicas;
 
-    private AdministradorZonas administradorZonas;
+    private final AdministradorZonas administradorZonas;
     private final Arena arena;
 
     public AdministradorDeSaques(Arena arena) {
@@ -34,11 +32,7 @@ public class AdministradorDeSaques {
 
     public boolean estaZonaGeneralExterior(Entity entity) {
 
-        if (!administradorZonas.getZonaGeneral().contains(entity) && administradorZonas.getZonaGeneralExterior().contains(entity)) {
-
-            return true;
-        }
-        return false;
+        return !administradorZonas.getZonaGeneral().contains(entity) && administradorZonas.getZonaExterior().contains(entity);
     }
 
 
@@ -64,31 +58,34 @@ public class AdministradorDeSaques {
         return null; // No se encontró ninguna entidad que cumpla con los criterios.
     }
 
-
     public void ejecutarAccion() {
         Entity entity = encontrarPrimeraEntidadEnZonaGeneralExterior();
-        if (entity != null) {
-            if (arena.getEntityInCancha() == null) {
-                ZonaTipo zona = encontrarTipoDeZonaParaEntidad(entity);
-                Team equipo =  obtenerEquipoOpuestoUltimoGolpe();
+        if (entity != null && arena.getEntityInCancha() == null && !mecanicas.isSaqueVigente()) {
+            procesarSaque(entity);
+        }
+    }
+    private void procesarSaque(Entity entity) {
+        ZonaTipo zona = encontrarTipoDeZonaParaEntidad(entity);
+        Team equipo = obtenerEquipoOpuestoUltimoGolpe();
 
-                switch (zona) {
-                    case HORIZONTAL:
-                        System.out.println("horizontal");
-                         mecanicas.teleportarJugadorAleatorioNoPortero(equipo, encontrarUbicacionParaSaqueDeBanda(entity));
+        if (equipo == null) {
+            // Manejo de caso de error o equipo nulo
+            return;
+        }
 
-                        break;
-                    case VERTICAL:
-                        mecanicas.teleportarJugadorAleatorioNoPortero(equipo, encontrarUbicacionParaTiroDeEsquina(entity));
-
-                        ;
-                        break;
-                    case GENERAL_EXTERIOR:
-
-                        break;
+        switch (zona) {
+            case HORIZONTAL:
+                mecanicas.teleportarJugadorAleatorioNoPortero(equipo, encontrarUbicacionParaSaqueDeBanda(entity));
+                System.out.println("horizontal");
+                break;
+            case VERTICAL:
+                if (equipo == determinateNearTeamZone(entity)) {
+                    mecanicas.teleportarPortero(equipo, encontrarUbicacionParaSaqueDeMeta(equipo));
+                } else {
+                    mecanicas.teleportarJugadorAleatorioNoPortero( equipo, encontrarUbicacionParaTiroDeEsquina(entity));
                 }
-
-            }
+                break;
+            // Potencialmente otros casos...
         }
     }
 
@@ -110,6 +107,8 @@ public class AdministradorDeSaques {
                 } else if (equipoGolpeador == Team.RED) {
                     return Team.BLUE;
                 }
+            } else {
+                return null;
             }
         }
 
@@ -121,12 +120,15 @@ public class AdministradorDeSaques {
     public ZonaTipo encontrarTipoDeZonaParaEntidad(Entity entity) {
         System.out.println("la entidad esta en" + entity.getLocation());
         if (administradorZonas.getZonaVerticalIzquierda().contains(entity) || administradorZonas.getZonaVerticalDerecha().contains(entity)) {
+            System.out.println("Se encuentra en la zona vertical");
             return ZonaTipo.VERTICAL;
+
         }
         if (administradorZonas.getZonaHorizontalSuperior().contains(entity) || administradorZonas.getZonaHorizontalInferior().contains(entity)) {
+            System.out.println("Se encuentra en la zona horizontal");
             return ZonaTipo.HORIZONTAL;
         }
-        if (administradorZonas.getZonaGeneralExterior().contains(entity)) {
+        if (administradorZonas.getZonaExterior().contains(entity)) {
             System.out.println("Se encuentra en la zona general exterior");
             return ZonaTipo.GENERAL_EXTERIOR;
         }
@@ -140,62 +142,28 @@ public class AdministradorDeSaques {
         double zBalon = ubicacionBalon.getZ();
 
         // Obtiene las esquinas de la zona lateral de juego.
-        Location esquinaSuperior = administradorZonas.getZonaGeneral().getCorner1(); // Asume que esta es la esquina superior.
-        Location esquinaInferior = administradorZonas.getZonaGeneral().getCorner2(); // Asume que esta es la esquina inferior.
-
-        // Imprime las esquinas de la zona para fines de depuración.
-
-
-        // Imprime la ubicación actual del balón para fines de depuración.
-
-
-        double zBordeCercano;
+        Location esquinaSuperior = administradorZonas.getZonaGeneral().getCorner1();
+        Location esquinaInferior = administradorZonas.getZonaGeneral().getCorner2();
 
         // Determina cuál de los bordes superiores o inferiores del campo está más cerca y utiliza ese para la ubicación Z.
-        if (Math.abs(zBalon - esquinaSuperior.getZ()) < Math.abs(zBalon - esquinaInferior.getZ())) {
-            zBordeCercano = esquinaSuperior.getZ(); // El balón está más cerca del borde superior del campo.
+        double zBordeCercano = Math.abs(zBalon - esquinaSuperior.getZ()) < Math.abs(zBalon - esquinaInferior.getZ()) ? esquinaSuperior.getZ() : esquinaInferior.getZ();
 
-        } else {
-            zBordeCercano = esquinaInferior.getZ(); // El balón está más cerca del borde inferior del campo.
-
-        }
-
-        // Imprime la coordenada Z del borde más cercano para fines de depuración.
-
-
-        // Crea y devuelve la nuevos ubicación para el saque de banda en base a los cálculos.
-        Location ubicacionSaqueBanda = new Location(ubicacionBalon.getWorld(), ubicacionBalon.getX(), ubicacionBalon.getY(), zBordeCercano);
-
-
-        return ubicacionSaqueBanda;
+        // Crea y devuelve la nueva ubicación para el saque de banda en base a los cálculos.
+        return new Location(ubicacionBalon.getWorld(), ubicacionBalon.getX(), ubicacionBalon.getY(), zBordeCercano);
     }
     public Location encontrarUbicacionParaTiroDeEsquina(Entity balon) {
         // Obtiene la ubicación actual del balón.
         Location ubicacionBalon = balon.getLocation();
 
-        // Obtiene las esquinas de las zonas verticales.
-        Set<Location> esquinasVerticales = new HashSet<>();
-        esquinasVerticales.addAll(administradorZonas.getEsquinasZonaVerticalIzquierda());
-        esquinasVerticales.addAll(administradorZonas.getEsquinasZonaVerticalDerecha());
+        // Obtiene las esquinas de las zonas generales.
+        Set<Location> esquinasGenerales = administradorZonas.getEsquinasZonaGeneral();
 
-        // Encuentra la esquina más cercana de las zonas verticales.
-        Location esquinaVerticalMasCercana = null;
-        double distanciaMinimaVertical = Double.MAX_VALUE;
-
-        for (Location esquina : esquinasVerticales) {
-            double distancia = ubicacionBalon.distance(esquina);
-            if (distancia < distanciaMinimaVertical) {
-                distanciaMinimaVertical = distancia;
-                esquinaVerticalMasCercana = esquina;
-            }
-        }
-
-        // Ahora encuentras la correspondiente esquina más cercana en la zona general.
+        // Encuentra la esquina más cercana dentro de las generales.
         Location esquinaGeneralMasCercana = null;
         double distanciaMinimaGeneral = Double.MAX_VALUE;
 
-        for (Location esquina : administradorZonas.getEsquinasZonaGeneral()) {
-            double distancia = esquinaVerticalMasCercana.distance(esquina);
+        for (Location esquina : esquinasGenerales) {
+            double distancia = ubicacionBalon.distance(esquina);
             if (distancia < distanciaMinimaGeneral) {
                 distanciaMinimaGeneral = distancia;
                 esquinaGeneralMasCercana = esquina;
@@ -209,23 +177,56 @@ public class AdministradorDeSaques {
         return esquinaGeneralMasCercana;
     }
 
+
+
+
+    public Location encontrarUbicacionParaSaqueDeMeta(Team team) {
+        Region region = arena.getPorteroRegion(team);
+        System.out.println(region.getMiddle());
+        return region.getMiddle();
+    }
+
+
     public Location encontrarUbicacionParaSaquedeDesdeJugadores(Player player, double distancia) {
         Location zBordeCercano = encontrarUbicacionParaSaqueDeBanda(player);
-        double adelantamiento = administradorZonas.getZonaHorizontalSuperior().contains(player) ? -distancia: distancia;
-        double nuevaZ = zBordeCercano.getZ() + adelantamiento;
+        double nuevaZ = zBordeCercano.getZ();
+
+        if(administradorZonas.getZonaHorizontalSuperior().contains(player)) {
+            System.out.println("Se encuentra en la zona horizontal superior");
+            nuevaZ += distancia;
+        }
+
+        if(administradorZonas.getZonaHorizontalInferior().contains(player)) {
+            System.out.println("Se encuentra en la zona horizontal inferior");
+            nuevaZ -= distancia;
+        }
 
         return new Location(zBordeCercano.getWorld(), zBordeCercano.getX(), zBordeCercano.getY(), nuevaZ);
     }
+    public Team determinateNearTeamZone(Entity balon) {
+        Location ubicacionBalon = balon.getLocation();
 
-    public void obtenerSilverFish() {
-        Silverfish silverfish = arena.getBolas().values().stream().findFirst().get();
+        double distanciaMinimaEsquina = Double.MAX_VALUE;
+        Team zonaMasCercana = null;
+
+        for (Map.Entry<Team, Region> entry : arena.getZones().entrySet()) {
+            Region zona = entry.getValue();
+            for (Location esquina : zona.getEsquinas()) {
+                double distancia = ubicacionBalon.distance(esquina);
+                if (distancia < distanciaMinimaEsquina) {
+                    distanciaMinimaEsquina = distancia;
+                    zonaMasCercana = entry.getKey();
+                }
+            }
+        }
+
+        System.out.println("equipo de zona mas cercana: " + zonaMasCercana);
+        return zonaMasCercana;
     }
+
 
     public MecanicasSaque getMecanicasSaque() {
         return mecanicas;
-    }
-    public AdministradorZonas getAdministradorZonas() {
-        return administradorZonas;
     }
 
     public enum ZonaTipo {

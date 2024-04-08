@@ -1,5 +1,6 @@
 package com.lubodi.futbollwachu.Manager;
 
+import com.lubodi.futbollwachu.FutballBola;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.configuration.file.FileConfiguration;
@@ -7,6 +8,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 
 public class ConfigManager {
     private static FileConfiguration config;
+    private static FutballBola minigame;
 
     /**
      * Set up the configuration for the Java plugin.
@@ -14,9 +16,10 @@ public class ConfigManager {
      * @param  plugin  the Java plugin to set up the configuration for
      * @return         void
      */
-    public static void setupConfig(JavaPlugin plugin) {
+    public static void setupConfig(JavaPlugin plugin, FutballBola futballBola) {
         config = plugin.getConfig();
         plugin.saveDefaultConfig();
+        minigame = futballBola;
     }
 
     /**
@@ -69,5 +72,31 @@ public class ConfigManager {
               (float) config.getDouble(path + ".yaw"),
               (float) config.getDouble(path + ".pitch")
       );
+    }
+
+    public static void setLocation(String path, Location location) {
+        config.set(path + ".world", location.getWorld().getName());
+        config.set(path + ".x", location.getX());
+        config.set(path + ".y", location.getY());
+        config.set(path + ".z", location.getZ());
+        config.set(path + ".yaw", location.getYaw());
+        config.set(path + ".pith", location.getPitch());
+        minigame.saveConfig();
+    }
+
+    public static void setRegion(String path, Region region) {
+        config.set(path + ".world", region.getCorner1().getWorld().getName());
+        config.set(path + ".x", region.getCorner1().getX());
+        config.set(path + ".y", region.getCorner1().getY());
+        config.set(path + ".z", region.getCorner1().getZ());
+        config.set(path + ".yaw", region.getCorner1().getYaw());
+        config.set(path + ".pith", region.getCorner1().getPitch());
+
+        config.set(path + ".x2", region.getCorner2().getX());
+        config.set(path + ".y2", region.getCorner2().getY());
+        config.set(path + ".z2", region.getCorner2().getZ());
+        config.set(path + ".yaw2", region.getCorner2().getYaw());
+        config.set(path + ".pith2", region.getCorner2().getPitch());
+        minigame.saveConfig();
     }
 }

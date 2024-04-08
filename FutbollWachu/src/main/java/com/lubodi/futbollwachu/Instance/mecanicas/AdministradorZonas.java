@@ -3,42 +3,54 @@ package com.lubodi.futbollwachu.Instance.mecanicas;
 import com.lubodi.futbollwachu.Instance.Arena;
 import com.lubodi.futbollwachu.Manager.Region;
 import com.lubodi.futbollwachu.team.Team;
-import org.bukkit.Bukkit;
+
 import org.bukkit.Location;
 import org.bukkit.World;
-import org.bukkit.entity.Entity;
-import org.bukkit.entity.Silverfish;
+
 
 import java.util.*;
 
 public class AdministradorZonas {
 
-    private Set<Location> esquinasZonaGeneralExterior; // Variable para almacenar las esquinas
-    private Set<Location> esquinasZonaGeneral;
-    private Region zonaGeneral;
-    private Region zonaGeneralExterior;
-    private Region zonaHorizontalSuperior;
-    private Region zonaHorizontalInferior;
-    private Region zonaVerticalIzquierda;
-    private Region zonaVerticalDerecha;
-    private Region zonaHorizontales;
-    private Region zonaVerticales;
 
+    private final Map<Region.ZoneType, Region> zonas = new HashMap<>();
+    private final Map<Region.ZoneType, Set<Location>> esquinas = new HashMap<>();
+
+    private final Arena arena;
     AdministradorZonas(Arena arena) {
-        this.zonaGeneral = crearZonaGeneral(arena.getRegionZona(Team.BLUE), arena.getRegionZona(Team.RED));
-        this.zonaGeneralExterior = crearZonaFueraDeCampo(zonaGeneral);
-        this.esquinasZonaGeneral = obtenerEsquinasDeRegion(this.zonaGeneral);
-        this.esquinasZonaGeneralExterior = obtenerEsquinasDeRegion(this.zonaGeneralExterior);
-        this.zonaHorizontalSuperior = crearZonaHorizontalSuperior(zonaGeneralExterior, 6);
-        this.zonaHorizontalInferior = crearZonaHorizontalInferior(zonaGeneralExterior, 6);
-        this.zonaHorizontales = unificarZonasHorizontales(zonaHorizontalSuperior, zonaHorizontalInferior, 2);
-        this.zonaVerticalIzquierda = crearZonaVerticalIzquierda(zonaGeneralExterior,6);
-        this.zonaVerticalDerecha = crearZonaVerticalDerecha(zonaGeneralExterior,6);
-        this.zonaVerticales = unificarZonasVerticales(zonaVerticalIzquierda, zonaVerticalDerecha, 4);
+
+        this.arena = arena;
+        crearZonas(arena);
+
 
 
     }
 
+
+    private void crearZonas(Arena arena) {
+        Region regionAzul = arena.getRegionZona(Team.BLUE);
+        Region regionRoja = arena.getRegionZona(Team.RED);
+        if (regionAzul == null || regionRoja == null) {
+            return;
+        }
+
+        Region zonaGeneral = crearZonaGeneral(regionAzul, regionRoja);
+        asignarZona(Region.ZoneType.GENERAL, crearZonaGeneral(regionAzul, regionRoja));
+        asignarZona(Region.ZoneType.EXTERIOR, crearZonaFueraDeCampo(zonaGeneral));
+        if(zonas.containsKey(Region.ZoneType.EXTERIOR)){
+            Region zonaExterior = zonas.get(Region.ZoneType.EXTERIOR);
+            asignarZona(Region.ZoneType.HORIZONTAL_SUPERIOR, crearZonaHorizontalSuperior(zonaExterior,6));
+            asignarZona(Region.ZoneType.HORIZONTAL_INFERIOR, crearZonaHorizontalInferior(zonaExterior,6));
+            asignarZona(Region.ZoneType.VERTICAL_RIGHT, crearZonaVerticalDerecha(zonaExterior,3));
+            asignarZona(Region.ZoneType.VERTICAL_LEFT, crearZonaVerticalIzquierda(zonaExterior,3));
+        }
+
+     imprimirRangosDeZona();
+    }
+    private void asignarZona(Region.ZoneType tipo, Region zona) {
+        zonas.put(tipo, zona);
+        esquinas.put(tipo, obtenerEsquinasDeRegion(zona));
+    }
     /**
      * Create a general zone based on the given regions and courts.
      *
@@ -66,7 +78,7 @@ public class AdministradorZonas {
     // Create a method to create a region outside of the general zone with a specified horizontal margin
     public Region crearZonaFueraDeCampo(Region generalZone) {
         // Define the horizontal margin
-        double horizontalMargin = 2;
+        double horizontalMargin = 6;
 
         // Get the corners of the general zone
         Location corner1 = generalZone.getCorner1();
@@ -116,52 +128,51 @@ public class AdministradorZonas {
 
 
     public Region crearZonaHorizontalSuperior(Region zonaGeneralExterior, double grosorZ) {
-        Location esquinaSuperiorMinX = esquinasZonaGeneralExterior.stream()
-                .filter(esquina -> esquina.getZ() == zonaGeneralExterior.getCorner2().getZ())
-                .min(Comparator.comparingDouble(Location::getX))
-                .orElse(null);
+        // Identificar el punto más alto de la zona exterior como punto de referencia para la zona superior.
+        double maxY = Math.max(zonaGeneralExterior.getCorner1().getY(), zonaGeneralExterior.getCorner2().getY());
+        double minY = Math.min(zonaGeneralExterior.getCorner1().getY(), zonaGeneralExterior.getCorner2().getY());
+        // Calcular las nuevas coordenadas Z basadas en el grosor dado y el extremo superior (maxY) de la zona.
+        double maxZ = zonaGeneralExterior.getCorner1().getZ(); // Usamos el mismo Z que la esquina 1.
+        double minZ = maxZ + grosorZ; // Reducimos el grosor desde el Z actual para obtener el borde inferior (minZ).
 
-        Location esquinaSuperiorMaxX = esquinasZonaGeneralExterior.stream()
-                .filter(esquina -> esquina.getZ() == zonaGeneralExterior.getCorner2().getZ())
-                .max(Comparator.comparingDouble(Location::getX))
-                .orElse(null);
+        // Calculamos las coordenadas X manteniendo las esquinas de la zona exterior.
+        double minX = Math.min(zonaGeneralExterior.getCorner1().getX(), zonaGeneralExterior.getCorner2().getX());
+        double maxX = Math.max(zonaGeneralExterior.getCorner1().getX(), zonaGeneralExterior.getCorner2().getX());
 
-        double minY = esquinaSuperiorMinX.getY();
+        // Las nuevas coordenadas Y serán un poco más altas que maxY para garantizar que se encuentran por encima.
 
-        double maxZ = esquinaSuperiorMinX.getZ() + grosorZ / 2;
-        double minZ = esquinaSuperiorMinX.getZ() - grosorZ / 2;
 
         return new Region(
-                new Location(zonaGeneralExterior.getCorner1().getWorld(), esquinaSuperiorMinX.getX(), minY, maxZ), // Esquina superior izquierda
-                new Location(zonaGeneralExterior.getCorner2().getWorld(), esquinaSuperiorMaxX.getX(), minY, minZ)); // Esquina superior derecha
-
+                new Location(zonaGeneralExterior.getCorner1().getWorld(), minX, minY, minZ),
+                new Location(zonaGeneralExterior.getCorner1().getWorld(), maxX, maxY, maxZ)
+        );
     }
 
     public Region crearZonaHorizontalInferior(Region zonaGeneralExterior, double grosorZ) {
-        Location esquinaInferiorMinX = esquinasZonaGeneralExterior.stream()
-                .filter(esquina -> esquina.getZ() == zonaGeneralExterior.getCorner1().getZ())
-                .min(Comparator.comparingDouble(Location::getX))
-                .orElse(null);
+        // Identificar el punto más bajo de la zona exterior como punto de referencia para la inferior.
+        double minY = Math.min(zonaGeneralExterior.getCorner1().getY(), zonaGeneralExterior.getCorner2().getY());
+        double maxY = Math.max(zonaGeneralExterior.getCorner1().getY(), zonaGeneralExterior.getCorner2().getY());
 
-        Location esquinaInferiorMaxX = esquinasZonaGeneralExterior.stream()
-                .filter(esquina -> esquina.getZ() == zonaGeneralExterior.getCorner1().getZ())
-                .max(Comparator.comparingDouble(Location::getX))
-                .orElse(null);
+        // Calcular las nuevas coordenadas Z basadas en el grosor dado y el extremo inferior (minY) de la zona.
+        double minZ = zonaGeneralExterior.getCorner2().getZ(); // Usamos el mismo Z que la esquina 2.
+        double maxZ = minZ - grosorZ; // Añadimos el grosor al Z actual para obtener el borde superior (maxZ).
 
-        double maxY = esquinaInferiorMinX.getY();
+        // Calculamos las coordenadas X manteniendo las esquinas de la zona exterior.
+        double minX = Math.min(zonaGeneralExterior.getCorner1().getX(), zonaGeneralExterior.getCorner2().getX());
+        double maxX = Math.max(zonaGeneralExterior.getCorner1().getX(), zonaGeneralExterior.getCorner2().getX());
 
-        double maxZ = esquinaInferiorMinX.getZ() + grosorZ / 2;
-        double minZ = esquinaInferiorMinX.getZ() - grosorZ / 2;
+        // Las nuevas coordenadas Y serán un poco más bajas que minY para asegurar que se encuentran por debajo.
+
 
         return new Region(
-                new Location(zonaGeneralExterior.getCorner1().getWorld(), esquinaInferiorMinX.getX(), maxY, minZ),
-                new Location(zonaGeneralExterior.getCorner1().getWorld(), esquinaInferiorMaxX.getX(), maxY, maxZ)
+                new Location(zonaGeneralExterior.getCorner1().getWorld(), minX, minY, minZ),
+                new Location(zonaGeneralExterior.getCorner1().getWorld(), maxX, maxY, maxZ)
         );
     }
 
 
 
-        // Establecer minY en el tope superior del rango
+    // Establecer minY en el tope superior del rango
 
 
 
@@ -206,71 +217,29 @@ public class AdministradorZonas {
     }
 
 
-    public Region unificarZonasHorizontales(Region zonaHorizontalSuperior, Region zonaHorizontalInferior, double grosorZ) {
-        double minX = Math.min(zonaHorizontalInferior.getCorner1().getX(), zonaHorizontalSuperior.getCorner1().getX());
-        double maxX = Math.max(zonaHorizontalInferior.getCorner2().getX(), zonaHorizontalSuperior.getCorner2().getX());
-        // La Y mínima vendría de la zona inferior y la máxima de la superior.
-        double minY = zonaHorizontalInferior.getCorner1().getY(); // Suponiendo que la Y de la esquina es la menor
-        double maxY = zonaHorizontalSuperior.getCorner2().getY(); // Suponiendo que la Y de la esquina es la mayor
 
-        // Expandir en Z sumando y restando la mitad del grosor deseado a Z actual.
-        // Asumiendo que ambas zonas horizontales estarían en la misma altura de Z, podríamos tomar cualquiera
-        double baseZ = zonaHorizontalInferior.getCorner1().getZ();
-        double minZ = baseZ - grosorZ / 2;
-        double maxZ = baseZ + grosorZ / 2;
 
-        World world = zonaHorizontalSuperior.getCorner1().getWorld();
 
-        return new Region(new Location(world, minX, minY, minZ),
-                new Location(world, maxX, maxY, maxZ));
+    public void imprimirRangosDeZona() {
+        for (Map.Entry<Region.ZoneType, Region> entrada : zonas.entrySet()) {
+            String nombreZona = entrada.getKey().toString();
+            Region zona = entrada.getValue();
+
+            imprimirRangoDeZona(nombreZona, zona);
+        }
     }
 
-
-
-
-
-
-    public Region unificarZonasVerticales(Region zonaVerticalIzquierda, Region zonaVerticalDerecha, double grosorX) {
-        double minZ = zonaVerticalIzquierda.getCorner1().getZ();
-        double maxZ = zonaVerticalDerecha.getCorner2().getZ();
-        double minY = zonaVerticalIzquierda.getCorner1().getY();
-        double maxY = zonaVerticalDerecha.getCorner2().getY();
-        // Expandir en X sumando y restando la mitad del grosor deseado a maxX y minX respectivamente
-        double minX = zonaVerticalIzquierda.getCorner1().getX() - grosorX / 2;
-        double maxX = zonaVerticalDerecha.getCorner2().getX() + grosorX / 2;
-
-        World world = zonaVerticalIzquierda.getCorner1().getWorld();
-
-        return new Region(new Location(world, minX, minY, minZ),
-                new Location(world, maxX, maxY, maxZ));
+    private void imprimirRangoDeZona(String nombreZona, Region zona) {
+        if (zona != null && zona.getCorner1() != null && zona.getCorner2() != null) {
+            Location esquina1 = zona.getCorner1();
+            Location esquina2 = zona.getCorner2();
+            System.out.println(nombreZona + ":");
+            System.out.println("  Esquina 1: X=" + esquina1.getX() + " Y=" + esquina1.getY() + " Z=" + esquina1.getZ());
+            System.out.println("  Esquina 2: X=" + esquina2.getX() + " Y=" + esquina2.getY() + " Z=" + esquina2.getZ());
+        } else {
+            System.out.println(nombreZona + ": [Información no disponible o zona no definida]");
+        }
     }
-
-
-    // Tus definiciones de zonas actuales...
-
-        // Método para imprimir los rangos de las zonas
-        public void imprimirRangosDeZonas() {
-            System.out.println("Rangos de Zonas:");
-            imprimirRangoDeZona("General Exterior", zonaGeneralExterior);
-            imprimirRangoDeZona("Horizontal Superior", zonaHorizontalSuperior);
-            imprimirRangoDeZona("Horizontal Inferior", zonaHorizontalInferior);
-            imprimirRangoDeZona("Vertical Izquierda", zonaVerticalIzquierda);
-            imprimirRangoDeZona("Vertical Derecha", zonaVerticalDerecha);
-            imprimirRangoDeZona("Unificación Horizontal", zonaHorizontales);
-            imprimirRangoDeZona("Unificación Vertical", zonaVerticales);
-        }
-
-        private void imprimirRangoDeZona(String nombreZona, Region zona) {
-            if (zona != null && zona.getCorner1() != null && zona.getCorner2() != null) {
-                Location esquina1 = zona.getCorner1();
-                Location esquina2 = zona.getCorner2();
-                System.out.println(nombreZona + ":");
-                System.out.println("  Esquina 1: X=" + esquina1.getX() + " Y=" + esquina1.getY() + " Z=" + esquina1.getZ());
-                System.out.println("  Esquina 2: X=" + esquina2.getX() + " Y=" + esquina2.getY() + " Z=" + esquina2.getZ());
-            } else {
-                System.out.println(nombreZona + ": [Información no disponible o zona no definida]");
-            }
-        }
 
 
 
@@ -286,54 +255,45 @@ public class AdministradorZonas {
 
 
 
-    public Region getZonaGeneral() {
-        return zonaGeneral;
-    }
 
-    public Region getZonaGeneralExterior() {
-        return zonaGeneralExterior;
-    }
-
-    public Region getZonaHorizontales() {
-        return zonaHorizontales;
-    }
-
-    public Region getZonaVerticales() {
-        return zonaVerticales;
-    }
-
-    public Region getZonaHorizontalSuperior() {
-        return zonaHorizontalSuperior;
-    }
-
-    public Region getZonaHorizontalInferior() {
-        return zonaHorizontalInferior;
-    }
-
-    public Region getZonaVerticalIzquierda() {
-        return zonaVerticalIzquierda;
-    }
-
-    public Region getZonaVerticalDerecha() {
-        return zonaVerticalDerecha;
-    }
-
-    public Set<Location> getEsquinasZonaGeneralExterior() {
-        return esquinasZonaGeneralExterior;
-    }
-
-    public Set<Location> getEsquinasZonaGeneral() {
-        return esquinasZonaGeneral;
-    }
     public Set<Location> getEsquinasZonaVerticalIzquierda() {
-        return obtenerEsquinasDeRegion(getZonaVerticalIzquierda());
+       Region zonaVerticalIzquierda = zonas.get(Region.ZoneType.VERTICAL_LEFT);
+       return zonaVerticalIzquierda != null ? obtenerEsquinasDeRegion(zonaVerticalIzquierda) : Collections.emptySet();
     }
 
     public Set<Location> getEsquinasZonaVerticalDerecha() {
-        return obtenerEsquinasDeRegion(getZonaVerticalDerecha());
+        Region zonaVerticalDerecha = zonas.get(Region.ZoneType.VERTICAL_RIGHT);
+        return zonaVerticalDerecha != null ? obtenerEsquinasDeRegion(zonaVerticalDerecha) : Collections.emptySet();
+    }
+    public Region getZonaGeneral() {
+        return zonas.get(Region.ZoneType.GENERAL);
+    }
+    public Region getZonaExterior() {
+        return zonas.get(Region.ZoneType.EXTERIOR);
+    }
+    public Region getZonaHorizontalSuperior()  {
+        return zonas.get(Region.ZoneType.HORIZONTAL_SUPERIOR);
+    }
+    public Region getZonaHorizontalInferior() {
+        return zonas.get(Region.ZoneType.HORIZONTAL_INFERIOR);
+    }
+    public Region getZonaVerticalIzquierda() {
+        return zonas.get(Region.ZoneType.VERTICAL_LEFT);
+    }
+    public Region getZonaVerticalDerecha() {
+        return zonas.get(Region.ZoneType.VERTICAL_RIGHT);
     }
 
-    public boolean isEntityInZonaGeneralExterior(Entity entity) {
-        return zonaGeneralExterior.contains(entity);
+    public Set<Location> getEsquinasZonaGeneral() {
+        // Obtiene la región general del mapa de zonas y calcula sus esquinas.
+        Region zonaGeneral = zonas.get(Region.ZoneType.GENERAL);
+        return obtenerEsquinasDeRegion(zonaGeneral);
     }
+    public Set<Location> getEsquinasZonaExterior() {
+        // Obtiene la región exterior del mapa de zonas y calcula sus esquinas.
+        Region zonaExterior = zonas.get(Region.ZoneType.EXTERIOR);
+        return obtenerEsquinasDeRegion(zonaExterior);
+    }
+
+
 }

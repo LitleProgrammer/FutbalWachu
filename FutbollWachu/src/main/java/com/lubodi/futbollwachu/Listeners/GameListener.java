@@ -50,22 +50,5 @@ public class GameListener implements Listener {
         }
     }
 
-    /**
-     * An event handler for when a Silverfish hits another entity.
-     *
-     * @param  event  the event representing the entity damage by another entity
-     */
-    @EventHandler
-    public void onSilverfishHit(EntityDamageByEntityEvent event) {
 
-        if (event.getEntity() instanceof Silverfish && event.getDamager() instanceof Player) {
-            if(event.getEntity().getCustomName().equals("Bola")){
-                Arena arenas = minigame.getArenaManager().getArena(((Player) event.getDamager()).getPlayer());
-                arenas.setLastHitters(((Player) event.getDamager()).getPlayer());
-            }
-
-
-        }
-
-    }
 }
