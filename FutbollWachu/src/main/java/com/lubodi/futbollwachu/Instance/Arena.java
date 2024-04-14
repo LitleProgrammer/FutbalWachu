@@ -493,6 +493,14 @@ public class Arena {
         return null;
     }
 
+    public Region getCancha(Team team) {
+        if (canchas.containsKey(team)) {
+            return canchas.get(team);
+        } else  {
+            return null;
+        }
+    }
+
     /**
      * Shows the scoreboard to players within a certain radius.
      *

@@ -1,6 +1,7 @@
 package com.lubodi.futbollwachu.Instance;
 
 import com.lubodi.futbollwachu.GameState;
+import com.lubodi.futbollwachu.particles.ParticleSpawner;
 import com.lubodi.futbollwachu.team.Team;
 import net.md_5.bungee.api.ChatColor;
 import org.bukkit.*;
@@ -77,6 +78,10 @@ public class Game {
         // Actualiza los puntos del equipo contrario
         arena.updateScores(opposingTeam, currentPoints);
         addPoint(opposingTeam);
+
+        //The particle displayed when scoring a goal
+        new ParticleSpawner().spawnParticle(Particle.TOTEM, arena.getCancha(ballTeam));
+
         // Elimina la entidad "Bola"
         Player player = arena.getLastHitters();
         if(player != null) {

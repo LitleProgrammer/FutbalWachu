@@ -4,6 +4,8 @@ import com.lubodi.futbollwachu.FutballBola;
 import com.lubodi.futbollwachu.HabilidadesFutbol.Interfaces.Habilidad;
 import com.lubodi.futbollwachu.HabilidadesFutbol.Interfaces.HabilidadesManager;
 import com.lubodi.futbollwachu.Instance.Arena;
+import com.lubodi.futbollwachu.particles.ParticleSpawner;
+import org.bukkit.Particle;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Silverfish;
 import org.bukkit.event.EventHandler;
@@ -35,6 +37,7 @@ public class onBolaLeftClickEvent implements Listener {
             Arena arena = plugin.getArenaManager().getArena(jugador);
             arena.setLastHitters(jugador);
             procesarHabilidadSilverfish(jugador);
+            new ParticleSpawner().spawnParticle(Particle.END_ROD, silverfish.getLocation());
         }
     }
 

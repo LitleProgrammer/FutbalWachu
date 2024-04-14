@@ -4,7 +4,9 @@ import com.lubodi.futbollwachu.FutballBola;
 import com.lubodi.futbollwachu.HabilidadesFutbol.Interfaces.Habilidad;
 import com.lubodi.futbollwachu.HabilidadesFutbol.Interfaces.HabilidadesManager;
 import com.lubodi.futbollwachu.Instance.Arena;
+import com.lubodi.futbollwachu.particles.ParticleSpawner;
 import org.bukkit.Bukkit;
+import org.bukkit.Particle;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Silverfish;
@@ -45,6 +47,8 @@ public class onBolaRigthClickEvent implements Listener {
         } else {
             manejarMovimientoBola(jugador, silverfish);
         }
+
+        new ParticleSpawner().spawnParticle(Particle.END_ROD, entidad.getLocation());
     }
 
     private boolean esBola(Entity entidad) {
