@@ -81,6 +81,10 @@ public class Game {
 
         //The particle displayed when scoring a goal
         new ParticleSpawner().spawnParticle(Particle.TOTEM, arena.getCancha(ballTeam));
+        for (UUID uuid : arena.getPlayers()) {
+            Player player = Bukkit.getPlayer(uuid);
+            player.sendTitle( ChatColor.GREEN.toString() + ChatColor.BOLD + "GOAL", ChatColor.BOLD.toString() + ChatColor.GOLD + arena.getLastHitters().getName() + " scored a goal for team " + ballTeam.name());
+        }
 
         // Elimina la entidad "Bola"
         Player player = arena.getLastHitters();
