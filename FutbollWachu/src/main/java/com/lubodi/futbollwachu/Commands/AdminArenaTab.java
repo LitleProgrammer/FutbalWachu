@@ -40,9 +40,9 @@ public class AdminArenaTab implements TabCompleter {
                 return arenas;
             }
         } else if (args.length == 3 && args[0].equalsIgnoreCase("edit")) {
-            return StringUtil.copyPartialMatches(args[2], Arrays.asList("setField", "setGoalRed", "setGoalBlue", "setPenaltyAreaRed", "setPenaltyAreaBlue"), new ArrayList<>());
+            return StringUtil.copyPartialMatches(args[2], Arrays.asList("setField", "setGoalRed", "setGoalBlue", "setPenaltyAreaRed", "setPenaltyAreaBlue", "setTeam1", "setTeam2"), new ArrayList<>());
             // /adminArena edit <name> setPenaltyAreaBlue x1 y1 z1 x2 y2 z2
-        } else if ((args.length == 4 && args[0].equalsIgnoreCase("edit")) || (args.length == 7 && args[0].equalsIgnoreCase("edit"))) {
+        } else if ((args.length == 4 && args[0].equalsIgnoreCase("edit")) || (args.length == 7 && args[0].equalsIgnoreCase("edit")) && !args[2].startsWith("setTeam")) {
             StringBuilder result = new StringBuilder();
             result.append(player.getTargetBlock(null, 5).getLocation().getX() + " ");
             result.append(player.getTargetBlock(null, 5).getLocation().getY() + " ");

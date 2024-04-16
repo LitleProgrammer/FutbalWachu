@@ -123,6 +123,12 @@ public class Arena {
     private final HashMap<UUID, Team> teams;
 
     /**
+     * HashMap containing the teams and their corresponding name
+     */
+
+    private final HashMap<Team, String> teamNames;
+
+    /**
      * Lista de jugadores.
      */
     private final List<UUID> players = new CopyOnWriteArrayList<>();
@@ -158,7 +164,7 @@ public class Arena {
 
          */
 
-    public Arena(FutballBola minigame, int id, String name,ConcurrentHashMap<Team, Region> portero, ConcurrentHashMap<Team, Region> canchas, Location ballSpawn, Location spawn, ConcurrentHashMap<Team, Region> zones) {
+    public Arena(FutballBola minigame, int id, String name, ConcurrentHashMap<Team, Region> portero, ConcurrentHashMap<Team, Region> canchas, Location ballSpawn, Location spawn, ConcurrentHashMap<Team, Region> zones, HashMap<Team, String> teamNames) {
         this.id = id;
         this.name = name;
         this.metodos = new Metodos(minigame, minigame.getFisicas());
@@ -168,6 +174,7 @@ public class Arena {
         this.ballSpawn = ballSpawn;
         this.spawn = spawn;
         this.zones = zones;
+        this.teamNames = teamNames;
         this.porteros = new ConcurrentHashMap<>();
         this.teams = new HashMap<>();
 
@@ -183,7 +190,7 @@ public class Arena {
         this.habilidades = HabilidadesManager.getInstance();
         this.bolas = new HashMap<>();
         for (Team team : Team.values()) {
-            Score score = this.objective.getScore(team.getDisplay() + ":");
+            Score score = this.objective.getScore(getTeamName(team) + ":");
             score.setScore(0);  // Puedes establecer aquí el puntaje inicial del equipo si es necesario
         }
         Score timeScore = this.objective.getScore("Tiempo:");
@@ -219,7 +226,7 @@ public class Arena {
         }
         Team lowest = count.values().iterator().next();
         setTeam(player, lowest);
-        player.sendMessage(ChatColor.AQUA + "Se te ha seleccionado al equipo " + lowest.getDisplay());
+        player.sendMessage(ChatColor.AQUA + "Se te ha seleccionado al equipo " + getTeamName(lowest));
 
         if (state == GameState.RECRUITING && players.size() >= ConfigManager.getRequiredPlayers()) {
             countdown.start();
@@ -231,7 +238,7 @@ public class Arena {
             if (!porteros.containsKey(playerTeam)) {
                 // Si no hay un portero en el equipo, asignas al jugador actual como portero
                 porteros.put(playerTeam, player.getUniqueId());
-                player.sendMessage(ChatColor.GREEN + "¡Eres el portero del equipo " + playerTeam.getDisplay() + "!");
+                player.sendMessage(ChatColor.GREEN + "¡Eres el portero del equipo " + getTeamName(playerTeam) + "!");
             }
         }
     }
@@ -264,7 +271,7 @@ public class Arena {
         objective = scoreboard.registerNewObjective("Marcador", "dummy", "Puntos");
         objective.setDisplaySlot(DisplaySlot.SIDEBAR);
         for (Team team : Team.values()) {
-            Score score = this.objective.getScore(team.getDisplay() + ":");
+            Score score = this.objective.getScore(getTeamName(team) + ":");
             score.setScore(0);  // Puedes establecer aquí el puntaje inicial del equipo si es necesario
         }
         Score timeScore = this.objective.getScore("Tiempo:");
@@ -485,7 +492,7 @@ public class Arena {
             Region cancha = entry.getValue();
             for (Entity entity : Bukkit.getWorld("world").getEntities()) {
                 if (entity instanceof Silverfish && entity.getCustomName().equals("Bola") && cancha.contains(entity)) {
-                    System.out.println("La entidad está en la cancha del equipo " + team.getDisplay());
+                    System.out.println("La entidad está en la cancha del equipo " + getTeamName(team));
                     return entity;
                 }
             }
@@ -522,7 +529,7 @@ public class Arena {
      * @param  score the new score for the team
      */
     public void updateScores(Team team, int score) {
-        Score scoreObj = objective.getScore(team.getDisplay() + ":");
+        Score scoreObj = objective.getScore(getTeamName(team) + ":");
         scoreObj.setScore(score);
     }
     /**
@@ -696,5 +703,12 @@ public class Arena {
         this.state = state;
     }
 
+
+    public String getTeamName(Team team) {
+        if (teamNames.containsKey(team)) {
+            return teamNames.get(team);
+        }
+        return null;
+    }
 
 }

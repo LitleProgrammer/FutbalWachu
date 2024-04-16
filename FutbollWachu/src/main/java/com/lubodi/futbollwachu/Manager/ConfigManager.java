@@ -99,4 +99,9 @@ public class ConfigManager {
         config.set(path + ".pith2", region.getCorner2().getPitch());
         minigame.saveConfig();
     }
+
+    public static void setString(String path, String string) {
+        config.set(path, string);
+        minigame.saveConfig();
+    }
 }

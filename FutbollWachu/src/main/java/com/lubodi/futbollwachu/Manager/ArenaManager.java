@@ -30,7 +30,9 @@ public class ArenaManager {
             ConcurrentHashMap<Team, Region> zones = new  ConcurrentHashMap<>();
             ConcurrentHashMap<Team, Region> portero = new ConcurrentHashMap<>();
             ConcurrentHashMap<Team, Region> canchas = new ConcurrentHashMap<>();
+            HashMap<Team, String> teamNames = new HashMap<>();
             for(String team : config.getConfigurationSection("arenas." + str + ".teams").getKeys(false)){
+                teamNames.put(Team.valueOf(team.toUpperCase()), config.getString("arenas." + str + ".teams." + team + ".name"));
                 zones.put(Team.valueOf(team.toUpperCase()), new Region(
                         new Location(
                                 world,
@@ -105,7 +107,7 @@ public class ArenaManager {
                     (float)config.getDouble("arenas."+str+".spawn.yaw"),
                     (float)config.getDouble("arenas."+str+".spawn.pitch")
             );
-            arenas.add(new Arena(minigame,Integer.parseInt(str), arenaName, portero, canchas, ballSpawn, spawn, zones));
+            arenas.add(new Arena(minigame,Integer.parseInt(str), arenaName, portero, canchas, ballSpawn, spawn, zones, teamNames));
         }
     }
 

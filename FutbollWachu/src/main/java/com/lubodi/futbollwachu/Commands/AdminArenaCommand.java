@@ -157,6 +157,28 @@ public class AdminArenaCommand implements CommandExecutor {
                         sender.sendMessage(ChatColor.RED + "Wrong usage type /adminArena help to get help");
                     }
                     break;
+                case "setTeam1":
+                    if (args.length == 4) {
+                        String teamName = args[3];
+                        int arenaID = minigame.getSetupArenas().get(name);
+
+                        ConfigManager.setString("arenas." + arenaID + ".teams.RED.name", teamName);
+                        sender.sendMessage(ChatColor.GREEN + "Successfully set the name of team 1 of arena: " + name);
+                    } else {
+                        sender.sendMessage(ChatColor.RED + "Wrong usage type /adminArena help to get help");
+                    }
+                    break;
+                case "setTeam2":
+                    if (args.length == 4) {
+                        String teamName = args[3];
+                        int arenaID = minigame.getSetupArenas().get(name);
+
+                        ConfigManager.setString("arenas." + arenaID + ".teams.BLUE.name", teamName);
+                        sender.sendMessage(ChatColor.GREEN + "Successfully set the name of team 2 of arena: " + name);
+                    } else {
+                        sender.sendMessage(ChatColor.RED + "Wrong usage type /adminArena help to get help");
+                    }
+                    break;
             }
         } else if (args[0].equalsIgnoreCase("remove")) {
             // adminArena remove <name>
@@ -184,6 +206,7 @@ public class AdminArenaCommand implements CommandExecutor {
                 try {
                     ArenaManager arenaManager = new ArenaManager(minigame);
                     minigame.setArenaManager(arenaManager);
+                    sender.sendMessage(ChatColor.GREEN + "Successfully finished the arena named: " + name);
                 } catch (NullPointerException e) {
                     sender.sendMessage(ChatColor.RED + "Something went wrong! Check, if all values are set in the config.");
                 }

@@ -42,7 +42,7 @@ public class GameListener implements Listener {
                 if(arenas.getTeam(player) == team){
                     player.sendMessage(ChatColor.RED + "Ya estas en este equipo");
                 }else {
-                    player.sendMessage(ChatColor.AQUA + " estas en el equipo " + team.getDisplay());
+                    player.sendMessage(ChatColor.AQUA + " estas en el equipo " + arenas.getTeamName(team));
                     arenas.setTeam(player, team);
                 }
             }
