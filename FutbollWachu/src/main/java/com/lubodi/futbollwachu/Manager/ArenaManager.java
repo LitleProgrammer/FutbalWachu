@@ -5,6 +5,7 @@ package com.lubodi.futbollwachu.Manager;
 import com.lubodi.futbollwachu.FutballBola;
 import com.lubodi.futbollwachu.Instance.Arena;
 import com.lubodi.futbollwachu.team.Team;
+import net.md_5.bungee.api.ChatColor;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.World;
@@ -31,8 +32,11 @@ public class ArenaManager {
             ConcurrentHashMap<Team, Region> portero = new ConcurrentHashMap<>();
             ConcurrentHashMap<Team, Region> canchas = new ConcurrentHashMap<>();
             HashMap<Team, String> teamNames = new HashMap<>();
+            HashMap<Team, ChatColor> teamColors = new HashMap<>();
             for(String team : config.getConfigurationSection("arenas." + str + ".teams").getKeys(false)){
                 teamNames.put(Team.valueOf(team.toUpperCase()), config.getString("arenas." + str + ".teams." + team + ".name"));
+                String teamColor = config.getString("arenas." + str + ".teams." + team + ".color");
+                teamColors.put(Team.valueOf(team.toUpperCase()), ChatColor.of(teamColor.equals(null) ? ChatColor.WHITE.toString() : teamColor.toUpperCase()));
                 zones.put(Team.valueOf(team.toUpperCase()), new Region(
                         new Location(
                                 world,
@@ -107,7 +111,7 @@ public class ArenaManager {
                     (float)config.getDouble("arenas."+str+".spawn.yaw"),
                     (float)config.getDouble("arenas."+str+".spawn.pitch")
             );
-            arenas.add(new Arena(minigame,Integer.parseInt(str), arenaName, portero, canchas, ballSpawn, spawn, zones, teamNames));
+            arenas.add(new Arena(minigame,Integer.parseInt(str), arenaName, portero, canchas, ballSpawn, spawn, zones, teamNames, teamColors));
         }
     }
 

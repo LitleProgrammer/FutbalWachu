@@ -12,6 +12,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import static com.sun.tools.javac.tree.TreeInfo.args;
+
 public class AdminArenaTab implements TabCompleter {
     private final FutballBola minigame;
     public AdminArenaTab(FutballBola minigame) {
@@ -40,7 +42,7 @@ public class AdminArenaTab implements TabCompleter {
                 return arenas;
             }
         } else if (args.length == 3 && args[0].equalsIgnoreCase("edit")) {
-            return StringUtil.copyPartialMatches(args[2], Arrays.asList("setField", "setGoalRed", "setGoalBlue", "setPenaltyAreaRed", "setPenaltyAreaBlue", "setTeam1", "setTeam2"), new ArrayList<>());
+            return StringUtil.copyPartialMatches(args[2], Arrays.asList("setField", "setGoalTeam1", "setGoalTeam2", "setPenaltyAreaTeam1", "setPenaltyAreaTeam2", "setTeam1", "setTeam2"), new ArrayList<>());
             // /adminArena edit <name> setPenaltyAreaBlue x1 y1 z1 x2 y2 z2
         } else if ((args.length == 4 && args[0].equalsIgnoreCase("edit")) || (args.length == 7 && args[0].equalsIgnoreCase("edit")) && !args[2].startsWith("setTeam")) {
             StringBuilder result = new StringBuilder();
@@ -49,6 +51,8 @@ public class AdminArenaTab implements TabCompleter {
             result.append(player.getTargetBlock(null, 5).getLocation().getZ());
 
             return Arrays.asList(result.toString());
+        } else if (args.length == 5 && args[0].equalsIgnoreCase("edit") && args[2].startsWith("setTeam")) {
+            return StringUtil.copyPartialMatches(args[4], Arrays.asList("BLACK", "DARK_BLUE", "DARK_GREEN", "DARK_AQUA", "DARK_RED", "DARK_PURPLE", "GOLD", "GRAY", "DARK_GRAY", "BLUE", "GREEN", "AQUA", "RED", "LIGHT_PURPLE", "YELLOW", "WHITE"), new ArrayList<>());
         }
 
         return null;

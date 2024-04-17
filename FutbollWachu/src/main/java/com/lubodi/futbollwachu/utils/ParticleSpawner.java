@@ -1,4 +1,4 @@
-package com.lubodi.futbollwachu.particles;
+package com.lubodi.futbollwachu.utils;
 
 import com.lubodi.futbollwachu.FutballBola;
 import com.lubodi.futbollwachu.Manager.Region;

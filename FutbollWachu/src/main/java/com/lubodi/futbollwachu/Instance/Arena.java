@@ -128,6 +128,9 @@ public class Arena {
 
     private final HashMap<Team, String> teamNames;
 
+
+    private final HashMap<Team, ChatColor> teamColors;
+
     /**
      * Lista de jugadores.
      */
@@ -164,7 +167,7 @@ public class Arena {
 
          */
 
-    public Arena(FutballBola minigame, int id, String name, ConcurrentHashMap<Team, Region> portero, ConcurrentHashMap<Team, Region> canchas, Location ballSpawn, Location spawn, ConcurrentHashMap<Team, Region> zones, HashMap<Team, String> teamNames) {
+    public Arena(FutballBola minigame, int id, String name, ConcurrentHashMap<Team, Region> portero, ConcurrentHashMap<Team, Region> canchas, Location ballSpawn, Location spawn, ConcurrentHashMap<Team, Region> zones, HashMap<Team, String> teamNames, HashMap<Team, ChatColor> teamColors) {
         this.id = id;
         this.name = name;
         this.metodos = new Metodos(minigame, minigame.getFisicas());
@@ -175,6 +178,7 @@ public class Arena {
         this.spawn = spawn;
         this.zones = zones;
         this.teamNames = teamNames;
+        this.teamColors = teamColors;
         this.porteros = new ConcurrentHashMap<>();
         this.teams = new HashMap<>();
 
@@ -709,6 +713,13 @@ public class Arena {
             return teamNames.get(team);
         }
         return null;
+    }
+
+    public ChatColor getTeamColor(Team team) {
+        if (teamColors.containsKey(team)) {
+            return teamColors.get(team);
+        }
+        return ChatColor.WHITE;
     }
 
 }

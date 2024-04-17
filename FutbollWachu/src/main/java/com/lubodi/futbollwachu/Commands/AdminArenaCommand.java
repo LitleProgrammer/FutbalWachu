@@ -77,7 +77,7 @@ public class AdminArenaCommand implements CommandExecutor {
                         sender.sendMessage(ChatColor.RED + "Wrong usage type /adminArena help to get help");
                     }
                     break;
-                case "setGoalRed":
+                case "setGoalTeam1":
                     // /adminArena edit <name> setGoalRed x1 y1 z1 x2 y2 z2
                     if (args.length == 9) {
                         //Getting the corners from the command
@@ -97,7 +97,7 @@ public class AdminArenaCommand implements CommandExecutor {
                         sender.sendMessage(ChatColor.RED + "Wrong usage type /adminArena help to get help");
                     }
                     break;
-                case "setGoalBlue":
+                case "setGoalTeam2":
                     // /adminArena edit <name> setGoalBlue x1 y1 z1 x2 y2 z2
                     if (args.length == 9) {
                         //Getting the corners from the command
@@ -117,7 +117,7 @@ public class AdminArenaCommand implements CommandExecutor {
                         sender.sendMessage(ChatColor.RED + "Wrong usage type /adminArena help to get help");
                     }
                     break;
-                case "setPenaltyAreaRed":
+                case "setPenaltyAreaTeam1":
                     // /adminArena edit <name> setPenaltyAreaRed x1 y1 z1 x2 y2 z2
                     if (args.length == 9) {
                         //Getting the corners from the command
@@ -137,7 +137,7 @@ public class AdminArenaCommand implements CommandExecutor {
                         sender.sendMessage(ChatColor.RED + "Wrong usage type /adminArena help to get help");
                     }
                     break;
-                case "setPenaltyAreaBlue":
+                case "setPenaltyAreaTeam2":
                     // /adminArena edit <name> setPenaltyAreaBlue x1 y1 z1 x2 y2 z2
                     if (args.length == 9) {
                         //Getting the corners from the command
@@ -158,22 +158,26 @@ public class AdminArenaCommand implements CommandExecutor {
                     }
                     break;
                 case "setTeam1":
-                    if (args.length == 4) {
+                    if (args.length == 5) {
                         String teamName = args[3];
+                        String teamColor = args[4];
                         int arenaID = minigame.getSetupArenas().get(name);
 
                         ConfigManager.setString("arenas." + arenaID + ".teams.RED.name", teamName);
+                        ConfigManager.setString("arenas." + arenaID + ".teams.RED.color", teamColor);
                         sender.sendMessage(ChatColor.GREEN + "Successfully set the name of team 1 of arena: " + name);
                     } else {
                         sender.sendMessage(ChatColor.RED + "Wrong usage type /adminArena help to get help");
                     }
                     break;
                 case "setTeam2":
-                    if (args.length == 4) {
+                    if (args.length == 5) {
                         String teamName = args[3];
+                        String teamColor = args[4];
                         int arenaID = minigame.getSetupArenas().get(name);
 
                         ConfigManager.setString("arenas." + arenaID + ".teams.BLUE.name", teamName);
+                        ConfigManager.setString("arenas." + arenaID + ".teams.BLUE.color", teamColor);
                         sender.sendMessage(ChatColor.GREEN + "Successfully set the name of team 2 of arena: " + name);
                     } else {
                         sender.sendMessage(ChatColor.RED + "Wrong usage type /adminArena help to get help");

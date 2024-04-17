@@ -4,7 +4,7 @@ import com.lubodi.futbollwachu.FutballBola;
 import com.lubodi.futbollwachu.HabilidadesFutbol.Interfaces.Habilidad;
 import com.lubodi.futbollwachu.HabilidadesFutbol.Interfaces.HabilidadesManager;
 import com.lubodi.futbollwachu.Instance.Arena;
-import com.lubodi.futbollwachu.particles.ParticleSpawner;
+import com.lubodi.futbollwachu.utils.ParticleSpawner;
 import org.bukkit.Particle;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Silverfish;
