@@ -69,7 +69,7 @@ public class CountdownGame extends BukkitRunnable {
                 }
             }
         }
-        arenas.updateScoresTime(1);
+        arenas.updateScoresTime(countdownSeconds);
         game.handleBall(arenas.getEntityInCancha());
         arenas.IniciarTirosLibres();
         countdownSeconds--;

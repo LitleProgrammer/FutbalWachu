@@ -30,6 +30,9 @@ public class Game {
     }
 
     public void end() {
+        for (UUID uuid : arena.getPlayers()) {
+            armorManager.removeArmor(Bukkit.getPlayer(uuid));
+        }
         arena.reset(true);
     }
 
@@ -87,7 +90,7 @@ public class Game {
         new ParticleSpawner().spawnParticle(Particle.TOTEM, arena.getCancha(ballTeam));
         for (UUID uuid : arena.getPlayers()) {
             Player player = Bukkit.getPlayer(uuid);
-            player.sendTitle( ChatColor.GREEN.toString() + ChatColor.BOLD + "GOAL", ChatColor.BOLD.toString() + ChatColor.GOLD + arena.getLastHitters().getName() + " scored a goal for " + arena.getTeamName(ballTeam), 10, 20, 20);
+            player.sendTitle( ChatColor.GREEN.toString() + ChatColor.BOLD + "GOAL", ChatColor.BOLD.toString() + ChatColor.GOLD + arena.getLastHitters().getName() + " scored a goal for " + arena.getTeamColor(opposingTeam) + arena.getTeamName(opposingTeam), 10, 20, 20);
         }
 
         // Elimina la entidad "Bola"

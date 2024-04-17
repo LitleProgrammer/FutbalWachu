@@ -22,10 +22,12 @@ public class ArmorManager {
         LeatherArmorMeta leggingsMeta = (LeatherArmorMeta) leatherLeggings.getItemMeta();
         LeatherArmorMeta bootsMeta = (LeatherArmorMeta) leatherBoots.getItemMeta();
 
-        helmetMeta.setColor(Color.fromRGB(color.getColor().getRGB()));
-        chestplateMeta.setColor(Color.fromRGB(color.getColor().getRGB()));
-        leggingsMeta.setColor(Color.fromRGB(color.getColor().getRGB()));
-        bootsMeta.setColor(Color.fromRGB(color.getColor().getRGB()));
+        Color rgbColor = Color.fromRGB(color.getColor().getRed(), color.getColor().getGreen(), color.getColor().getBlue());
+
+        helmetMeta.setColor(rgbColor);
+        chestplateMeta.setColor(rgbColor);
+        leggingsMeta.setColor(rgbColor);
+        bootsMeta.setColor(rgbColor);
 
         helmetMeta.addEnchant(Enchantment.BINDING_CURSE, 1, true);
         chestplateMeta.addEnchant(Enchantment.BINDING_CURSE, 1, true);
