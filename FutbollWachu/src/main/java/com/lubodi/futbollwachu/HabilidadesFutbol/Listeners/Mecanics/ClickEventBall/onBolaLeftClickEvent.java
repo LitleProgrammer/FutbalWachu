@@ -5,6 +5,7 @@ import com.lubodi.futbollwachu.HabilidadesFutbol.Interfaces.Habilidad;
 import com.lubodi.futbollwachu.HabilidadesFutbol.Interfaces.HabilidadesManager;
 import com.lubodi.futbollwachu.Instance.Arena;
 import com.lubodi.futbollwachu.utils.ParticleSpawner;
+import com.lubodi.futbollwachu.utils.SoundManager;
 import org.bukkit.Particle;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Silverfish;
@@ -38,6 +39,7 @@ public class onBolaLeftClickEvent implements Listener {
             arena.setLastHitters(jugador);
             procesarHabilidadSilverfish(jugador);
             new ParticleSpawner().spawnParticle(Particle.END_ROD, silverfish.getLocation());
+            new SoundManager().ballHitSound(jugador);
         }
     }
 

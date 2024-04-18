@@ -38,7 +38,7 @@ public class Arena {
     /**
      * Scoreboard del juego.
      */
-    private final Scoreboard scoreboard;
+    private Scoreboard scoreboard;
 
     /**
      * Objetivo del scoreboard.
@@ -225,6 +225,12 @@ public class Arena {
         timeTeam.setSuffix(ChatColor.GOLD.toString() + ChatColor.BOLD.toString() + String.valueOf(ConfigManager.getCountDownGameSeconds()));
         objective.getScore(ChatColor.YELLOW.toString()).setScore(4);
 
+        Score space1 = objective.getScore(" ");
+        Score space2 = objective.getScore("  ");
+
+        space1.setScore(3);
+        space2.setScore(5);
+
         this.tiros = new AdministradorDeSaques(this);
     }
 
@@ -282,7 +288,7 @@ public class Arena {
                 if (player != null) {
                     player.teleport(loc);
                     habilidades.eliminarTodasLasHabilidades(player.getUniqueId());
-                    player.setScoreboard(Objects.requireNonNull(Bukkit.getScoreboardManager()).getMainScoreboard());
+                    player.setScoreboard(Objects.requireNonNull(Bukkit.getScoreboardManager()).getNewScoreboard());
                 }
             }
 
@@ -301,25 +307,43 @@ public class Arena {
         objective.setDisplaySlot(DisplaySlot.SIDEBAR);
 
         //Team1
-        org.bukkit.scoreboard.Team team1 = objective.getScoreboard().registerNewTeam(getTeamName(Team.RED));
-        team1.addEntry(ChatColor.GREEN.toString());
-        team1.setPrefix(ChatColor.GREEN.toString() + "Goals " + getTeamName(Team.RED) + " ");
-        team1.setSuffix(ChatColor.GOLD.toString() + ChatColor.BOLD.toString() + "0  ");
-        objective.getScore(ChatColor.GREEN.toString()).setScore(2);
+        if (objective.getScoreboard().getTeam(getTeamName(Team.RED)) == null) {
+            org.bukkit.scoreboard.Team team1 = objective.getScoreboard().registerNewTeam(getTeamName(Team.RED));
+            team1.addEntry(ChatColor.GREEN.toString());
+            team1.setPrefix(ChatColor.GREEN.toString() + "Goals " + getTeamName(Team.RED) + " ");
+            team1.setSuffix(ChatColor.GOLD.toString() + ChatColor.BOLD.toString() + "0  ");
+            objective.getScore(ChatColor.GREEN.toString()).setScore(2);
+        } else {
+            org.bukkit.scoreboard.Team team1 = objective.getScoreboard().getTeam(getTeamName(Team.RED));
+            team1.setSuffix(ChatColor.GOLD.toString() + ChatColor.BOLD.toString() + "0  ");
+        }
 
         //Team2
-        org.bukkit.scoreboard.Team team2 = objective.getScoreboard().registerNewTeam(getTeamName(Team.BLUE));
-        team2.addEntry(ChatColor.GOLD.toString());
-        team2.setPrefix(ChatColor.GREEN.toString() + "Goals " + getTeamName(Team.BLUE) + " ");
-        team2.setSuffix(ChatColor.GOLD.toString() + ChatColor.BOLD.toString() + "0  ");
-        objective.getScore(ChatColor.GOLD.toString()).setScore(1);
+        if (objective.getScoreboard().getTeam(getTeamName(Team.BLUE)) == null) {
+            org.bukkit.scoreboard.Team team2 = objective.getScoreboard().registerNewTeam(getTeamName(Team.BLUE));
+            team2.addEntry(ChatColor.GOLD.toString());
+            team2.setPrefix(ChatColor.GREEN.toString() + "Goals " + getTeamName(Team.BLUE) + " ");
+            team2.setSuffix(ChatColor.GOLD.toString() + ChatColor.BOLD.toString() + "0  ");
+            objective.getScore(ChatColor.GOLD.toString()).setScore(1);
+        } else {
+            org.bukkit.scoreboard.Team team2 = objective.getScoreboard().getTeam(getTeamName(Team.BLUE));
+            team2.setSuffix(ChatColor.GOLD.toString() + ChatColor.BOLD.toString() + "0  ");
+        }
 
         //Countdown
-        org.bukkit.scoreboard.Team timeTeam = objective.getScoreboard().registerNewTeam("timeTeam");
-        timeTeam.addEntry(ChatColor.YELLOW.toString());
-        timeTeam.setPrefix(ChatColor.GREEN.toString() + "Time left ");
-        timeTeam.setSuffix(ChatColor.GOLD.toString() + ChatColor.BOLD.toString() + String.valueOf(ConfigManager.getCountDownGameSeconds()));
-        objective.getScore(ChatColor.YELLOW.toString()).setScore(4);
+        if (objective.getScoreboard().getTeam("timeTeam") == null) {
+            org.bukkit.scoreboard.Team timeTeam = objective.getScoreboard().registerNewTeam("timeTeam");
+            timeTeam.addEntry(ChatColor.YELLOW.toString());
+            timeTeam.setPrefix(ChatColor.GREEN.toString() + "Time left ");
+            timeTeam.setSuffix(ChatColor.GOLD.toString() + ChatColor.BOLD.toString() + String.valueOf(ConfigManager.getCountDownGameSeconds()));
+            objective.getScore(ChatColor.YELLOW.toString()).setScore(4);
+        }
+
+        Score space1 = objective.getScore(" ");
+        Score space2 = objective.getScore("  ");
+
+        space1.setScore(3);
+        space2.setScore(5);
 
 
         countdownGame = new CountdownGame(minigame, this, game);
@@ -560,10 +584,16 @@ public class Arena {
      * @param  radius  the radius within which to display the scoreboard
      */
     public void showScoreboardToPlayersInRadius(int radius) {
+        System.out.println("Running");
         for (Player player : Bukkit.getOnlinePlayers()) {
             for (Player nearbyPlayer : player.getWorld().getPlayers()) {
                 if (player != nearbyPlayer && player.getLocation().distance(nearbyPlayer.getLocation()) <= radius) {
+                    System.out.println("setting scoreboard");
+                    System.out.println(scoreboard != null);
+                    System.out.println(scoreboard.getObjective("Marcador") != null);
+                    System.out.println(scoreboard.getObjective("Marcador").getScoreboard().getTeam(getTeamName(Team.RED)) != null);
                     player.setScoreboard(scoreboard);
+                    System.out.println("Set scoreboard for: " + player.getName());
                 }
             }
         }
@@ -584,7 +614,6 @@ public class Arena {
      * @param  time  the time to update the scores with
      */
     public void updateScoresTime(int time) {
-        System.out.println(time);
         org.bukkit.scoreboard.Team timeTeam = objective.getScoreboard().getTeam("timeTeam");
         timeTeam.setSuffix(ChatColor.GOLD.toString() + ChatColor.BOLD.toString() + String.valueOf(time) + "  ");
     }
@@ -598,6 +627,7 @@ public class Arena {
     public void eliminarScoreboard(String nombreMarcador) {
         if (scoreboard.getObjective(nombreMarcador) != null) {
             scoreboard.getObjective(nombreMarcador).unregister();
+            scoreboard = Bukkit.getScoreboardManager().getNewScoreboard();
         }
     }
 

@@ -5,6 +5,7 @@ import com.lubodi.futbollwachu.HabilidadesFutbol.Interfaces.Habilidad;
 import com.lubodi.futbollwachu.HabilidadesFutbol.Interfaces.HabilidadesManager;
 import com.lubodi.futbollwachu.Instance.Arena;
 import com.lubodi.futbollwachu.utils.ParticleSpawner;
+import com.lubodi.futbollwachu.utils.SoundManager;
 import org.bukkit.Bukkit;
 import org.bukkit.Particle;
 import org.bukkit.entity.Entity;
@@ -49,6 +50,7 @@ public class onBolaRigthClickEvent implements Listener {
         }
 
         new ParticleSpawner().spawnParticle(Particle.END_ROD, entidad.getLocation());
+        new SoundManager().ballHitSound(jugador);
     }
 
     private boolean esBola(Entity entidad) {

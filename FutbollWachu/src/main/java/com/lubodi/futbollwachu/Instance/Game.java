@@ -4,6 +4,7 @@ import com.lubodi.futbollwachu.GameState;
 import com.lubodi.futbollwachu.utils.ArmorManager;
 import com.lubodi.futbollwachu.utils.ParticleSpawner;
 import com.lubodi.futbollwachu.team.Team;
+import com.lubodi.futbollwachu.utils.SoundManager;
 import net.md_5.bungee.api.ChatColor;
 import org.bukkit.*;
 import org.bukkit.entity.Entity;
@@ -88,6 +89,7 @@ public class Game {
 
         //The particle displayed when scoring a goal
         new ParticleSpawner().spawnParticle(Particle.TOTEM, arena.getCancha(ballTeam));
+        new SoundManager().scoreGoalSound(arena.getLastHitters());
         for (UUID uuid : arena.getPlayers()) {
             Player player = Bukkit.getPlayer(uuid);
             player.sendTitle( ChatColor.GREEN.toString() + ChatColor.BOLD + "GOAL", ChatColor.BOLD.toString() + ChatColor.GOLD + arena.getLastHitters().getName() + " scored a goal for " + arena.getTeamColor(opposingTeam) + arena.getTeamName(opposingTeam), 10, 20, 20);
