@@ -32,7 +32,9 @@ public class Game {
 
     public void end() {
         for (UUID uuid : arena.getPlayers()) {
-            armorManager.removeArmor(Bukkit.getPlayer(uuid));
+            Player player = Bukkit.getPlayer(uuid);
+            armorManager.removeArmor(player);
+            player.stopSound(SoundCategory.AMBIENT);
         }
         arena.reset(true);
     }
@@ -50,6 +52,7 @@ public class Game {
             Player player = Bukkit.getPlayer(uuid);
             player.closeInventory();
             armorManager.setArmor(arena.getTeamColor(arena.getTeam(player)), player);
+            new SoundManager().playAmbientSound(player);
         }
     }
     /**

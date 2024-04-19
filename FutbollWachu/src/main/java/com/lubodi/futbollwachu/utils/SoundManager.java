@@ -2,6 +2,7 @@ package com.lubodi.futbollwachu.utils;
 
 import com.lubodi.futbollwachu.Instance.Arena;
 import org.bukkit.Sound;
+import org.bukkit.SoundCategory;
 import org.bukkit.entity.Player;
 
 public class SoundManager {
@@ -17,6 +18,10 @@ public class SoundManager {
 
     public void countDownSound(Player player) {
         player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_BASS, 1f, 1f);
+    }
+
+    public void playAmbientSound(Player player) {
+        player.playSound(player.getLocation(), "futbal:ambient", SoundCategory.AMBIENT, 1f, 1f);
     }
 
 }
