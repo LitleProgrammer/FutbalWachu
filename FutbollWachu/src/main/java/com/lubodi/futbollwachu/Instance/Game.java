@@ -1,10 +1,12 @@
 package com.lubodi.futbollwachu.Instance;
 
 import com.lubodi.futbollwachu.GameState;
+import com.lubodi.futbollwachu.utils.ArmorManager;
+import com.lubodi.futbollwachu.utils.ParticleSpawner;
 import com.lubodi.futbollwachu.team.Team;
+import com.lubodi.futbollwachu.utils.SoundManager;
 import net.md_5.bungee.api.ChatColor;
 import org.bukkit.*;
-import org.bukkit.entity.EnderDragon;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 
@@ -16,17 +18,24 @@ public class Game {
     private Arena arena;
     private HashMap<UUID, Integer> points;
     private Map<Team, Integer> teamScores;
+    private ArmorManager armorManager;
 
     public Game(Arena arena) {
         this.arena = arena;
         points = new HashMap<>();
         teamScores = new HashMap<>();
+        armorManager = new ArmorManager();
         for (Team team : Team.values()) {
             teamScores.put(team, 0);
         }
     }
 
     public void end() {
+        for (UUID uuid : arena.getPlayers()) {
+            Player player = Bukkit.getPlayer(uuid);
+            armorManager.removeArmor(player);
+            player.stopSound(SoundCategory.AMBIENT);
+        }
         arena.reset(true);
     }
 
@@ -40,7 +49,10 @@ public class Game {
         arena.spawnearbola();
         for (UUID uuid : arena.getPlayers()) {
             points.put(uuid, 0);
-            Bukkit.getPlayer(uuid).closeInventory();
+            Player player = Bukkit.getPlayer(uuid);
+            player.closeInventory();
+            armorManager.setArmor(arena.getTeamColor(arena.getTeam(player)), player);
+            new SoundManager().playAmbientSound(player);
         }
     }
     /**
@@ -77,6 +89,15 @@ public class Game {
         // Actualiza los puntos del equipo contrario
         arena.updateScores(opposingTeam, currentPoints);
         addPoint(opposingTeam);
+
+        //The particle displayed when scoring a goal
+        new ParticleSpawner().spawnParticle(Particle.TOTEM, arena.getCancha(ballTeam));
+        new SoundManager().scoreGoalSound(arena.getLastHitters());
+        for (UUID uuid : arena.getPlayers()) {
+            Player player = Bukkit.getPlayer(uuid);
+            player.sendTitle( ChatColor.GREEN.toString() + ChatColor.BOLD + "GOAL", ChatColor.BOLD.toString() + ChatColor.GOLD + arena.getLastHitters().getName() + " scored a goal for " + arena.getTeamColor(opposingTeam) + arena.getTeamName(opposingTeam), 10, 20, 20);
+        }
+
         // Elimina la entidad "Bola"
         Player player = arena.getLastHitters();
         if(player != null) {

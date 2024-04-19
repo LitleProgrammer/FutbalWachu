@@ -16,6 +16,8 @@ arenas:
     world: 'world'
     teams:
       RED:
+        name: "Team1"
+        color: "GREEN"
         zona:
           world: 'world'
           x: -87
@@ -53,6 +55,8 @@ arenas:
           yaw2: -180
           pitch2: 0
       BLUE:
+        name: "Team2"
+        color: "AQUA"
         zona:
           world: 'world'
           x: -44

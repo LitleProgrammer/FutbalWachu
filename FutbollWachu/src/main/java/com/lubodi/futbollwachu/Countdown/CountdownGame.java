@@ -47,11 +47,11 @@ public class CountdownGame extends BukkitRunnable {
             Team winningTeam = game.getWinningTeam();
             if (winningTeam != null) {
                 // Hay un equipo ganador
-                String winningTeamName = game.getWinningTeam().getDisplay();
-                arenas.sendTitle(winningTeamName + " ha ganado", "");
+                String winningTeamName = arenas.getTeamName(game.getWinningTeam());
+                arenas.sendTitle(  ChatColor.GOLD.toString() + ChatColor.BOLD + "Felicidades", ChatColor.DARK_GREEN.toString() + ChatColor.BOLD + winningTeamName + ChatColor.RESET + ChatColor.GREEN + " ha ganado");
             } else {
                 // Empate
-                arenas.sendTitle("Empate", "");
+                arenas.sendTitle(ChatColor.GOLD.toString() + ChatColor.BOLD + "Empate", "");
             }
             arenas.startCountdownEndGame();
             arenas.matarSilverfish();
@@ -69,7 +69,7 @@ public class CountdownGame extends BukkitRunnable {
                 }
             }
         }
-        arenas.updateScoresTime(1);
+        arenas.updateScoresTime(countdownSeconds);
         game.handleBall(arenas.getEntityInCancha());
         arenas.IniciarTirosLibres();
         countdownSeconds--;

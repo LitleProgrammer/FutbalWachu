@@ -38,7 +38,7 @@ public class Arena {
     /**
      * Scoreboard del juego.
      */
-    private final Scoreboard scoreboard;
+    private Scoreboard scoreboard;
 
     /**
      * Objetivo del scoreboard.
@@ -123,6 +123,15 @@ public class Arena {
     private final HashMap<UUID, Team> teams;
 
     /**
+     * HashMap containing the teams and their corresponding name
+     */
+
+    private final HashMap<Team, String> teamNames;
+
+
+    private final HashMap<Team, ChatColor> teamColors;
+
+    /**
      * Lista de jugadores.
      */
     private final List<UUID> players = new CopyOnWriteArrayList<>();
@@ -158,7 +167,17 @@ public class Arena {
 
          */
 
-    public Arena(FutballBola minigame, int id, String name,ConcurrentHashMap<Team, Region> portero, ConcurrentHashMap<Team, Region> canchas, Location ballSpawn, Location spawn, ConcurrentHashMap<Team, Region> zones) {
+
+        /*
+            Futbal
+            Time left 2sec4
+            3
+            Goals team1 02
+            Goals team2 11
+            0
+         */
+
+    public Arena(FutballBola minigame, int id, String name, ConcurrentHashMap<Team, Region> portero, ConcurrentHashMap<Team, Region> canchas, Location ballSpawn, Location spawn, ConcurrentHashMap<Team, Region> zones, HashMap<Team, String> teamNames, HashMap<Team, ChatColor> teamColors) {
         this.id = id;
         this.name = name;
         this.metodos = new Metodos(minigame, minigame.getFisicas());
@@ -168,6 +187,8 @@ public class Arena {
         this.ballSpawn = ballSpawn;
         this.spawn = spawn;
         this.zones = zones;
+        this.teamNames = teamNames;
+        this.teamColors = teamColors;
         this.porteros = new ConcurrentHashMap<>();
         this.teams = new HashMap<>();
 
@@ -178,16 +199,37 @@ public class Arena {
         this.countdownGame = new CountdownGame(minigame, this, game);
         this.countdownEnd = new CountdownEnd(minigame, this, game);
         this.scoreboard = Objects.requireNonNull(Bukkit.getScoreboardManager()).getNewScoreboard();
-        this.objective = this.scoreboard.registerNewObjective("Marcador", "dummy", "Puntos");
+        this.objective = this.scoreboard.registerNewObjective("Marcador", "dummy", ChatColor.GOLD.toString() + ChatColor.BOLD + "Futbal");
         this.objective.setDisplaySlot(DisplaySlot.SIDEBAR);
         this.habilidades = HabilidadesManager.getInstance();
         this.bolas = new HashMap<>();
-        for (Team team : Team.values()) {
-            Score score = this.objective.getScore(team.getDisplay() + ":");
-            score.setScore(0);  // Puedes establecer aquí el puntaje inicial del equipo si es necesario
-        }
-        Score timeScore = this.objective.getScore("Tiempo:");
-        timeScore.setScore(ConfigManager.getCountDownGameSeconds());
+
+        //Team1
+        org.bukkit.scoreboard.Team team1 = objective.getScoreboard().registerNewTeam(getTeamName(Team.RED));
+        team1.addEntry(ChatColor.GREEN.toString());
+        team1.setPrefix(ChatColor.GREEN.toString() + "Goals " + getTeamName(Team.RED) + " ");
+        team1.setSuffix(ChatColor.GOLD.toString() + ChatColor.BOLD.toString() + "0  ");
+        objective.getScore(ChatColor.GREEN.toString()).setScore(2);
+
+        //Team2
+        org.bukkit.scoreboard.Team team2 = objective.getScoreboard().registerNewTeam(getTeamName(Team.BLUE));
+        team2.addEntry(ChatColor.GOLD.toString());
+        team2.setPrefix(ChatColor.GREEN.toString() + "Goals " + getTeamName(Team.BLUE) + " ");
+        team2.setSuffix(ChatColor.GOLD.toString() + ChatColor.BOLD.toString() + "0  ");
+        objective.getScore(ChatColor.GOLD.toString()).setScore(1);
+
+        //Countdown
+        org.bukkit.scoreboard.Team timeTeam = objective.getScoreboard().registerNewTeam("timeTeam");
+        timeTeam.addEntry(ChatColor.YELLOW.toString());
+        timeTeam.setPrefix(ChatColor.GREEN.toString() + "Time left ");
+        timeTeam.setSuffix(ChatColor.GOLD.toString() + ChatColor.BOLD.toString() + String.valueOf(ConfigManager.getCountDownGameSeconds()));
+        objective.getScore(ChatColor.YELLOW.toString()).setScore(4);
+
+        Score space1 = objective.getScore(" ");
+        Score space2 = objective.getScore("  ");
+
+        space1.setScore(3);
+        space2.setScore(5);
 
         this.tiros = new AdministradorDeSaques(this);
     }
@@ -219,7 +261,7 @@ public class Arena {
         }
         Team lowest = count.values().iterator().next();
         setTeam(player, lowest);
-        player.sendMessage(ChatColor.AQUA + "Se te ha seleccionado al equipo " + lowest.getDisplay());
+        player.sendMessage(ChatColor.AQUA + "Se te ha seleccionado al equipo " + getTeamName(lowest));
 
         if (state == GameState.RECRUITING && players.size() >= ConfigManager.getRequiredPlayers()) {
             countdown.start();
@@ -231,7 +273,7 @@ public class Arena {
             if (!porteros.containsKey(playerTeam)) {
                 // Si no hay un portero en el equipo, asignas al jugador actual como portero
                 porteros.put(playerTeam, player.getUniqueId());
-                player.sendMessage(ChatColor.GREEN + "¡Eres el portero del equipo " + playerTeam.getDisplay() + "!");
+                player.sendMessage(ChatColor.GREEN + "¡Eres el portero del equipo " + getTeamName(playerTeam) + "!");
             }
         }
     }
@@ -246,7 +288,7 @@ public class Arena {
                 if (player != null) {
                     player.teleport(loc);
                     habilidades.eliminarTodasLasHabilidades(player.getUniqueId());
-                    player.setScoreboard(Objects.requireNonNull(Bukkit.getScoreboardManager()).getMainScoreboard());
+                    player.setScoreboard(Objects.requireNonNull(Bukkit.getScoreboardManager()).getNewScoreboard());
                 }
             }
 
@@ -261,14 +303,49 @@ public class Arena {
 
 
         eliminarScoreboard("Marcador");
-        objective = scoreboard.registerNewObjective("Marcador", "dummy", "Puntos");
+        objective = scoreboard.registerNewObjective("Marcador", "dummy", ChatColor.GOLD.toString() + ChatColor.BOLD + "Futbal");
         objective.setDisplaySlot(DisplaySlot.SIDEBAR);
-        for (Team team : Team.values()) {
-            Score score = this.objective.getScore(team.getDisplay() + ":");
-            score.setScore(0);  // Puedes establecer aquí el puntaje inicial del equipo si es necesario
+
+        //Team1
+        if (objective.getScoreboard().getTeam(getTeamName(Team.RED)) == null) {
+            org.bukkit.scoreboard.Team team1 = objective.getScoreboard().registerNewTeam(getTeamName(Team.RED));
+            team1.addEntry(ChatColor.GREEN.toString());
+            team1.setPrefix(ChatColor.GREEN.toString() + "Goals " + getTeamName(Team.RED) + " ");
+            team1.setSuffix(ChatColor.GOLD.toString() + ChatColor.BOLD.toString() + "0  ");
+            objective.getScore(ChatColor.GREEN.toString()).setScore(2);
+        } else {
+            org.bukkit.scoreboard.Team team1 = objective.getScoreboard().getTeam(getTeamName(Team.RED));
+            team1.setSuffix(ChatColor.GOLD.toString() + ChatColor.BOLD.toString() + "0  ");
         }
-        Score timeScore = this.objective.getScore("Tiempo:");
-        timeScore.setScore(ConfigManager.getCountDownGameSeconds());
+
+        //Team2
+        if (objective.getScoreboard().getTeam(getTeamName(Team.BLUE)) == null) {
+            org.bukkit.scoreboard.Team team2 = objective.getScoreboard().registerNewTeam(getTeamName(Team.BLUE));
+            team2.addEntry(ChatColor.GOLD.toString());
+            team2.setPrefix(ChatColor.GREEN.toString() + "Goals " + getTeamName(Team.BLUE) + " ");
+            team2.setSuffix(ChatColor.GOLD.toString() + ChatColor.BOLD.toString() + "0  ");
+            objective.getScore(ChatColor.GOLD.toString()).setScore(1);
+        } else {
+            org.bukkit.scoreboard.Team team2 = objective.getScoreboard().getTeam(getTeamName(Team.BLUE));
+            team2.setSuffix(ChatColor.GOLD.toString() + ChatColor.BOLD.toString() + "0  ");
+        }
+
+        //Countdown
+        if (objective.getScoreboard().getTeam("timeTeam") == null) {
+            org.bukkit.scoreboard.Team timeTeam = objective.getScoreboard().registerNewTeam("timeTeam");
+            timeTeam.addEntry(ChatColor.YELLOW.toString());
+            timeTeam.setPrefix(ChatColor.GREEN.toString() + "Time left ");
+            timeTeam.setSuffix(ChatColor.GOLD.toString() + ChatColor.BOLD.toString() + String.valueOf(ConfigManager.getCountDownGameSeconds()));
+            objective.getScore(ChatColor.YELLOW.toString()).setScore(4);
+        }
+
+        Score space1 = objective.getScore(" ");
+        Score space2 = objective.getScore("  ");
+
+        space1.setScore(3);
+        space2.setScore(5);
+
+
         countdownGame = new CountdownGame(minigame, this, game);
         countdownEnd = new CountdownEnd(minigame, this, game);
         countdown = new Countdown(minigame, this);
@@ -485,12 +562,20 @@ public class Arena {
             Region cancha = entry.getValue();
             for (Entity entity : Bukkit.getWorld("world").getEntities()) {
                 if (entity instanceof Silverfish && entity.getCustomName().equals("Bola") && cancha.contains(entity)) {
-                    System.out.println("La entidad está en la cancha del equipo " + team.getDisplay());
+                    System.out.println("La entidad está en la cancha del equipo " + getTeamName(team));
                     return entity;
                 }
             }
         }
         return null;
+    }
+
+    public Region getCancha(Team team) {
+        if (canchas.containsKey(team)) {
+            return canchas.get(team);
+        } else  {
+            return null;
+        }
     }
 
     /**
@@ -499,10 +584,16 @@ public class Arena {
      * @param  radius  the radius within which to display the scoreboard
      */
     public void showScoreboardToPlayersInRadius(int radius) {
+        System.out.println("Running");
         for (Player player : Bukkit.getOnlinePlayers()) {
             for (Player nearbyPlayer : player.getWorld().getPlayers()) {
                 if (player != nearbyPlayer && player.getLocation().distance(nearbyPlayer.getLocation()) <= radius) {
+                    System.out.println("setting scoreboard");
+                    System.out.println(scoreboard != null);
+                    System.out.println(scoreboard.getObjective("Marcador") != null);
+                    System.out.println(scoreboard.getObjective("Marcador").getScoreboard().getTeam(getTeamName(Team.RED)) != null);
                     player.setScoreboard(scoreboard);
+                    System.out.println("Set scoreboard for: " + player.getName());
                 }
             }
         }
@@ -514,8 +605,8 @@ public class Arena {
      * @param  score the new score for the team
      */
     public void updateScores(Team team, int score) {
-        Score scoreObj = objective.getScore(team.getDisplay() + ":");
-        scoreObj.setScore(score);
+        org.bukkit.scoreboard.Team bukkitTeam = objective.getScoreboard().getTeam(getTeamName(team));
+        bukkitTeam.setSuffix(ChatColor.GOLD.toString() + ChatColor.BOLD.toString() + score + "  ");
     }
     /**
      * Updates the scores based on the given time.
@@ -523,9 +614,8 @@ public class Arena {
      * @param  time  the time to update the scores with
      */
     public void updateScoresTime(int time) {
-        Score timeScore = this.objective.getScore("Tiempo:");
-        int numero = timeScore.getScore();
-        timeScore.setScore(numero - time);
+        org.bukkit.scoreboard.Team timeTeam = objective.getScoreboard().getTeam("timeTeam");
+        timeTeam.setSuffix(ChatColor.GOLD.toString() + ChatColor.BOLD.toString() + String.valueOf(time) + "  ");
     }
 
     /**
@@ -537,6 +627,7 @@ public class Arena {
     public void eliminarScoreboard(String nombreMarcador) {
         if (scoreboard.getObjective(nombreMarcador) != null) {
             scoreboard.getObjective(nombreMarcador).unregister();
+            scoreboard = Bukkit.getScoreboardManager().getNewScoreboard();
         }
     }
 
@@ -688,5 +779,19 @@ public class Arena {
         this.state = state;
     }
 
+
+    public String getTeamName(Team team) {
+        if (teamNames.containsKey(team)) {
+            return teamNames.get(team);
+        }
+        return null;
+    }
+
+    public ChatColor getTeamColor(Team team) {
+        if (teamColors.containsKey(team)) {
+            return teamColors.get(team);
+        }
+        return ChatColor.WHITE;
+    }
 
 }

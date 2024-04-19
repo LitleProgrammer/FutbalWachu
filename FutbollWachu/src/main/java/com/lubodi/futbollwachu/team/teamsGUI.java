@@ -21,7 +21,7 @@ public class teamsGUI implements Listener {
         for (Team team: Team.values()){
             ItemStack item = new ItemStack(team.getMaterial());
             ItemMeta meta = item.getItemMeta();
-            meta.setDisplayName(team.getDisplay() + " " + ChatColor.GRAY + "(" + arena.getTeamCount(team) + "jugadores");
+            meta.setDisplayName(arena.getTeamName(team) + " " + ChatColor.GRAY + "(" + arena.getTeamCount(team) + "jugadores");
             meta.setLocalizedName(team.name());
             item.setItemMeta(meta);
             gui.addItem(item);

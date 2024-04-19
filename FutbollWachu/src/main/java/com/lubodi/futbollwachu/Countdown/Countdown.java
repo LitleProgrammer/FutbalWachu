@@ -5,6 +5,7 @@ import com.lubodi.futbollwachu.GameState;
 import com.lubodi.futbollwachu.Instance.Arena;
 import com.lubodi.futbollwachu.Manager.ConfigManager;
 import com.lubodi.futbollwachu.team.Team;
+import com.lubodi.futbollwachu.utils.SoundManager;
 import net.md_5.bungee.api.ChatColor;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
@@ -56,6 +57,9 @@ public class Countdown extends BukkitRunnable {
         }
         if (countdownSeconds.get() <= 10 || countdownSeconds.get() % 15 == 0) {
             arenas.sendmessage(String.format("%sGame will start in %d second%s.", ChatColor.GREEN, countdownSeconds.get(), (countdownSeconds.get() == 1 ? "" : "s")));
+            for (UUID uuid : arenas.getPlayers()) {
+                new SoundManager().countDownSound(Bukkit.getPlayer(uuid));
+            }
         }
         arenas.sendTitle(String.format("%s%d second%s", ChatColor.GREEN, countdownSeconds.get(), (countdownSeconds.get() == 1 ? "" : "s")), ChatColor.GRAY + "until game start");
         countdownSeconds.decrementAndGet();
